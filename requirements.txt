@@ -1,0 +1,11 @@
+agno     
+mcp                                                                                                                                                     
+anthropic                                                                                                                                                     
+fastapi[standard]                                                                                                                                             
+sqlalchemy       
+typer                                                                                                                                             
+python-dotenv                                                                                                                                                 
+opentelemetry-sdk                                                                                                                                             
+opentelemetry-exporter-otlp                                                                                                                                   
+openinference-instrumentation-agno 
+fastmcp
