@@ -1,28 +1,40 @@
-# 📰 Substack Author Agent
+# Substack Author Agent
 
-An Agent that leverages MCP & SKILLs to help you with your Substack Content Strategy.
+An [Agno](https://docs.agno.com/) agent that uses MCP tools and Skills to help with Substack content strategy. It connects to the [Substack Author MCP](https://substack-author.fastmcp.app/mcp) server for data, uses Skills for domain expertise, tracks behavior with [Opik](https://www.comet.com/site/products/opik/), and can be exposed as an MCP server itself via AgentOS.
 
-It also tracks its behavior with [Opik (by Comet)](https://www.comet.com/site/products/opik/) and is exposed as MCP Server for faster integration to the outside.
+## Stack
 
-## Key Features
+| Component | What | Why |
+|-----------|------|-----|
+| [Agno](https://docs.agno.com/) | Agent framework | Skills, MCPTools, AgentOS, CLI app |
+| [Claude Haiku 4.5](https://docs.anthropic.com/en/docs/about-claude/models) | LLM | Fast + cheap for tool orchestration |
+| [Substack Author MCP](https://github.com/aboyalejandro/substack-author-mcp) | Remote MCP server | Articles, notes, comments, performance data |
+| [Opik + OpenTelemetry](https://www.comet.com/docs/opik/integrations/agno) | Observability | Trace every agent run, tool call, and skill activation |
+| [AgentOS](https://docs.agno.com/agent-os/mcp/mcp) | MCP wrapper | Expose the agent as an MCP server |
 
-[PLACEHOLDER FOR STACK]
-- Interactive CLI for Agent with SKILLs & MCP Tools
-- Agent exposed as MCP Server to pack all functionality into a simple tool `run_agent`
+## Skills
+
+The agent loads 5 skills from `skills/` that guide its behavior based on what you ask:
+
+| Skill | Trigger | MCP Tools Used |
+|-------|---------|----------------|
+| `analyze-notes` | "How are my notes doing?" | `get_substack_notes` |
+| `analyze-articles` | "What articles worked?" | `get_substack_articles`, `get_article_performance`, `get_article_content` |
+| `analyze-comments` | "What are readers saying?" | `get_article_comments` |
+| `content-ideas` | "What should I write next?" | `get_substack_articles`, `get_article_performance`, `get_substack_notes` |
+| `brand-voice` | "What's my writing style?" | `get_substack_articles`, `get_article_content` |
 
 ## Setup
 
 ```bash
-# Install dependencies
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Configure .env
 cp .env.example .env
 ```
 
-Edit `.env` file:
+Edit `.env`:
 ```bash
 ANTHROPIC_API_KEY=sk-ant-...
 OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
@@ -31,22 +43,55 @@ OTEL_EXPORTER_OTLP_HEADERS=Authorization=<your-opik-api-key>,Comet-Workspace=def
 
 ## Usage
 
-#### Talk to the Substack Author Agent directly
+### CLI Agent
 
 ```bash
-# Run the interactive CLI to talk to the agent
 python agent.py
 ```
 
-#### Expose Agent as MCP and use it as a wrapper
+Talk to the agent directly. Ask about your notes, articles, comments, content ideas, or writing voice. It streams responses and keeps conversation history in-memory.
+
+### MCP Server (AgentOS)
 
 ```bash
-# Activate the MCP Server and connect it to Claude Code, Cursor using stdio transport and http://localhost:7777/mcp
 python server.py
 ```
 
-[PLACEHOLDER FOR DEMO]
+Exposes the agent at `http://localhost:7777/mcp` with a single `run_agent` tool. Connect it to Claude Code, Cursor, or any MCP client.
 
-### Resources
+## Demo
+
+### Agent CLI
+
+| User Message | Agent Response |
+|---|---|
+| ![User message](demo/agno_user_message.png) | ![Agent response](demo/agno_agent_response.png) |
+
+### Opik Observability
+
+| Trace Overview | Tool Calls | Skill Usage |
+|---|---|---|
+| ![Trace](demo/opik_trace.png) | ![Tool call](demo/opik_tool_call.png) | ![Skill usage](demo/opik_skill_usage.png) |
+
+## Project Structure
+
+```
+substack-author-agent/
+├── agent.py              # CLI agent: Skills + MCPTools + Opik
+├── server.py             # AgentOS: exposes agent as MCP server
+├── requirements.txt
+├── .env.example
+└── skills/
+    ├── analyze-notes/SKILL.md
+    ├── analyze-articles/SKILL.md
+    ├── analyze-comments/SKILL.md
+    ├── content-ideas/SKILL.md
+    └── brand-voice/SKILL.md
+```
+
+## Resources
+
 - [Agno - Agent with Skills](https://docs.agno.com/skills/overview)
 - [Agno - Agent as MCP Server](https://docs.agno.com/agent-os/mcp/mcp#agentos-as-mcp-server)
+- [Opik - Agno Integration](https://www.comet.com/docs/opik/integrations/agno)
+- [Agent Skills Specification](https://agentskills.io/specification)
