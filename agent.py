@@ -31,6 +31,7 @@ db = InMemoryDb()
 # Create and configure the agent
 substack_author_agent = Agent(
     name="Substack Author Agent",
+    id="substack-author-agent",
     model=Claude(id="claude-haiku-4-5-20251001", api_key=claude_api_key),
     tools=[substack_author_mcp],
     db=db,

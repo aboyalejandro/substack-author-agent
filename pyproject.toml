@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "substack-author-agent"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "agno",
+    "mcp",
+    "anthropic",
+    "fastapi[standard]",
+    "sqlalchemy",
+    "typer",
+    "python-dotenv",
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-otlp",
+    "openinference-instrumentation-agno",
+    "fastmcp",
+]
+
