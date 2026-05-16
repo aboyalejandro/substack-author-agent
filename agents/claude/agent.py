@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import anthropic
+import opik
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from opik.integrations.anthropic import track_anthropic
@@ -62,8 +63,7 @@ async def _run_agent_loop(history: list[dict], mcp_session: ClientSession) -> st
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
-                    result = await mcp_session.call_tool(block.name, block.input)
-                    content_text = "".join(part.text for part in result.content if hasattr(part, "text"))
+                    content_text = await _call_mcp_tool(mcp_session, block.name, block.input)
                     tool_results.append({
                         "type": "tool_result",
                         "tool_use_id": block.id,
@@ -77,6 +77,13 @@ async def _run_agent_loop(history: list[dict], mcp_session: ClientSession) -> st
             return ""
 
 
+@opik.track(name="mcp_tool_call", type="tool")
+async def _call_mcp_tool(mcp_session: ClientSession, tool_name: str, tool_input: dict) -> str:
+    result = await mcp_session.call_tool(tool_name, tool_input)
+    return "".join(part.text for part in result.content if hasattr(part, "text"))
+
+
+@opik.track(name="claude-agent-run", project_name="substack-author-agent")
 async def run(message: str, session_id: str) -> str:
     if session_id not in sessions:
         sessions[session_id] = []
