@@ -20,3 +20,18 @@ dependencies = [
     "fastmcp",
 ]
 
+[project.optional-dependencies]
+claude-sdk = [
+    "anthropic",
+    "mcp",
+    "fastapi[standard]",
+    "uvicorn",
+    "python-dotenv",
+]
+openai-sdk = [
+    "openai-agents",
+    "fastapi[standard]",
+    "uvicorn",
+    "python-dotenv",
+]
+
