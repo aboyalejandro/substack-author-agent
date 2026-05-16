@@ -3,12 +3,16 @@ from dotenv import load_dotenv
 import anthropic
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
+from opik.integrations.anthropic import track_anthropic
 from constants import MCP_URL, CLAUDE_MODEL
 from shared.prompt import SYSTEM_PROMPT
 
 load_dotenv()
 
-_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+_client = track_anthropic(
+    anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY")),
+    project_name="substack-author-agent",
+)
 
 sessions: dict[str, list] = {}
 

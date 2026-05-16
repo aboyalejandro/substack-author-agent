@@ -5,10 +5,20 @@ from agno.models.anthropic import Claude
 from agno.tools.mcp import MCPTools
 from agno.skills import Skills, LocalSkills
 from agno.db.in_memory import InMemoryDb
+from openinference.instrumentation.agno import AgnoInstrumentor
+from opentelemetry import trace as trace_api
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from constants import MCP_URL, AGNO_MODEL
 from shared.prompt import AGNO_INSTRUCTIONS
 
 load_dotenv()
+
+_tracer_provider = TracerProvider()
+_tracer_provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
+trace_api.set_tracer_provider(tracer_provider=_tracer_provider)
+AgnoInstrumentor().instrument()
 
 _mcp = MCPTools(transport="streamable-http", url=MCP_URL)
 _db = InMemoryDb()

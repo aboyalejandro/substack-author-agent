@@ -18,6 +18,7 @@ dependencies = [
     "opentelemetry-exporter-otlp",
     "openinference-instrumentation-agno",
     "fastmcp",
+    "opik",
 ]
 
 [project.optional-dependencies]

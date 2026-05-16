@@ -1,10 +1,13 @@
 from dotenv import load_dotenv
-from agents import Agent, Runner
+from agents import Agent, Runner, add_trace_processor
 from agents.mcp import MCPServerStreamableHttp
+from opik.integrations.openai.agents import OpikTracingProcessor
 from constants import MCP_URL, OPENAI_MODEL
 from shared.prompt import SYSTEM_PROMPT
 
 load_dotenv()
+
+add_trace_processor(OpikTracingProcessor(project_name="substack-author-agent"))
 
 mcp_server = MCPServerStreamableHttp(
     params={"url": MCP_URL},
