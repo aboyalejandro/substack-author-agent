@@ -2,7 +2,7 @@
 
 ## What this project is
 
-Three implementations of the same Substack content strategy agent (agno / anthropic SDK / openai-agents SDK), unified behind a single FastAPI server. The user is Alejandro Aboy, author of [The Pipe and the Line](https://thepipeandtheline.substack.com).
+Three implementations of the same Substack content strategy agent (agno / anthropic SDK / openai-agents SDK), unified behind a single FastAPI server. Originally built by Alejandro Aboy for [The Pipe and the Line](https://thepipeandtheline.substack.com) — replace the publication URL in examples with your own.
 
 ## Run the server
 
@@ -26,17 +26,17 @@ curl -X POST http://localhost:7777/agents/agno/runs \
 # Agno (Claude Haiku 4.5 via Agno framework + Skills)
 curl -X POST http://localhost:7777/agents/agno/runs \
   -H "Content-Type: application/json" \
-  -d '{"message": "Analyze my latest articles from https://thepipeandtheline.substack.com"}'
+  -d '{"message": "Analyze my latest articles from https://yourpublication.substack.com"}'
 
 # Claude (Claude Haiku 4.5 via Anthropic SDK manual loop)
 curl -X POST http://localhost:7777/agents/claude/runs \
   -H "Content-Type: application/json" \
-  -d '{"message": "Analyze my latest articles from https://thepipeandtheline.substack.com"}'
+  -d '{"message": "Analyze my latest articles from https://yourpublication.substack.com"}'
 
 # OpenAI (GPT-5 Mini via OpenAI Agents SDK)
 curl -X POST http://localhost:7777/agents/openai/runs \
   -H "Content-Type: application/json" \
-  -d '{"message": "Analyze my latest articles from https://thepipeandtheline.substack.com"}'
+  -d '{"message": "Analyze my latest articles from https://yourpublication.substack.com"}'
 ```
 
 ### Session continuity
