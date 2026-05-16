@@ -48,17 +48,13 @@ def get_skills_prompt_snippet() -> str:
     """System prompt block listing skills — tells the agent to call get_skill_instructions first."""
     if not SKILLS:
         return ""
-    lines = ["<skills>"]
-    lines.append(
-        "When the user's request matches one of these skills, call get_skill_instructions(skill_name) "
-        "FIRST to load the detailed instructions before using any other tools."
+    names = ", ".join(SKILLS.keys())
+    return (
+        f"You have skills for content strategy tasks. "
+        f"When the user's request is about content analysis or planning, "
+        f"call get_skill_instructions(skill_name) FIRST — before any other tool — "
+        f"to load step-by-step instructions. Available skills: {names}."
     )
-    lines.append("")
-    for skill in SKILLS.values():
-        lines.append(f'<skill name="{skill["name"]}">{skill["description"]}</skill>')
-    lines.append("</skills>")
-    lines.append("Skill names are NOT callable directly. Use get_skill_instructions to load them.")
-    return "\n".join(lines)
 
 
 def get_skill_instructions(skill_name: str) -> str:
