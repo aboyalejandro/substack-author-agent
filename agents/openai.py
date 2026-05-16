@@ -1,14 +1,4 @@
-"""
-Substack Author Agent - OpenAI Agents SDK
-FastAPI server on http://localhost:7779
-"""
-
-import uuid
-from contextlib import asynccontextmanager
-from typing import Optional
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from pydantic import BaseModel
 from agents import Agent, Runner
 from agents.mcp import MCPServerStreamableHttp
 
@@ -59,90 +49,27 @@ When user asks what to write next, needs topic ideas, or content planning:
 - Use relative comparisons since absolute numbers vary by publication size
 """
 
-# MCP server instance — connected once at startup
+# Connected once at server lifespan startup
 mcp_server = MCPServerStreamableHttp(
     params={"url": MCP_URL},
     cache_tools_list=True,
     name="substack-author-mcp",
 )
 
-# Agent — defined once; MCP server is connected via lifespan
-substack_agent = Agent(
+_agent = Agent(
     name="Substack Author Agent",
     instructions=SYSTEM_PROMPT,
     model=MODEL,
     mcp_servers=[mcp_server],
 )
 
-# session_id -> full conversation history as input list
+# session_id -> full conversation history (result.to_input_list())
 sessions: dict[str, list] = {}
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    await mcp_server.connect()
-    yield
-    await mcp_server.cleanup()
-
-
-app = FastAPI(
-    title="Substack Author Agent - OpenAI Agents SDK",
-    version="1.0.0",
-    lifespan=lifespan,
-)
-
-
-class RunRequest(BaseModel):
-    message: str
-    session_id: Optional[str] = None
-
-
-class RunResponse(BaseModel):
-    run_id: str
-    agent_id: str
-    session_id: str
-    content: str
-    status: str
-
-
-@app.get("/agents")
-def list_agents():
-    return [{"id": "substack-author-agent", "name": "Substack Author Agent", "sdk": "openai"}]
-
-
-@app.get("/agents/substack-author-agent/sessions")
-def list_sessions():
-    return [
-        {"session_id": sid, "turns": sum(1 for m in history if m.get("role") == "user")}
-        for sid, history in sessions.items()
-    ]
-
-
-@app.post("/agents/substack-author-agent/runs", response_model=RunResponse)
-async def run_agent(request: RunRequest):
-    session_id = request.session_id or str(uuid.uuid4())
-    run_id = str(uuid.uuid4())
-
+async def run(message: str, session_id: str) -> str:
     history = sessions.get(session_id, [])
-
-    if history:
-        agent_input = history + [{"role": "user", "content": request.message}]
-    else:
-        agent_input = request.message
-
-    result = await Runner.run(substack_agent, input=agent_input)
-
+    agent_input = history + [{"role": "user", "content": message}] if history else message
+    result = await Runner.run(_agent, input=agent_input)
     sessions[session_id] = result.to_input_list()
-
-    return RunResponse(
-        run_id=run_id,
-        agent_id="substack-author-agent",
-        session_id=session_id,
-        content=str(result.final_output),
-        status="completed",
-    )
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7779)
+    return str(result.final_output)

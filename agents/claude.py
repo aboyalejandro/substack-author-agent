@@ -1,14 +1,5 @@
-"""
-Substack Author Agent - Anthropic Claude SDK
-FastAPI server on http://localhost:7778
-"""
-
 import os
-import uuid
-from typing import Optional
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from pydantic import BaseModel
 import anthropic
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
@@ -60,12 +51,10 @@ When user asks what to write next, needs topic ideas, or content planning:
 - Use relative comparisons since absolute numbers vary by publication size
 """
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 # session_id -> list of {"role": "user"/"assistant", "content": str}
 sessions: dict[str, list] = {}
-
-app = FastAPI(title="Substack Author Agent - Claude SDK", version="1.0.0")
 
 
 def _mcp_tool_to_claude(tool) -> dict:
@@ -77,16 +66,12 @@ def _mcp_tool_to_claude(tool) -> dict:
 
 
 async def _run_agent_loop(history: list[dict], mcp_session: ClientSession) -> str:
-    """Agent loop: call Claude, handle tool use, repeat until end_turn."""
     tools_result = await mcp_session.list_tools()
     claude_tools = [_mcp_tool_to_claude(t) for t in tools_result.tools]
-
-    # Working copy — history contains text-only user/assistant messages.
-    # We'll append tool_use and tool_result blocks here without polluting history.
     messages = list(history)
 
     while True:
-        response = client.messages.create(
+        response = _client.messages.create(
             model=MODEL,
             max_tokens=4096,
             system=SYSTEM_PROMPT,
@@ -101,7 +86,6 @@ async def _run_agent_loop(history: list[dict], mcp_session: ClientSession) -> st
             return ""
 
         if response.stop_reason == "tool_use":
-            # Serialize assistant turn (may contain text + tool_use blocks)
             assistant_content = []
             for block in response.content:
                 if block.type == "text":
@@ -115,65 +99,29 @@ async def _run_agent_loop(history: list[dict], mcp_session: ClientSession) -> st
                     })
             messages.append({"role": "assistant", "content": assistant_content})
 
-            # Call each tool via MCP
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
                     result = await mcp_session.call_tool(block.name, block.input)
-                    content_text = ""
-                    for part in result.content:
-                        if hasattr(part, "text"):
-                            content_text += part.text
+                    content_text = "".join(part.text for part in result.content if hasattr(part, "text"))
                     tool_results.append({
                         "type": "tool_result",
                         "tool_use_id": block.id,
                         "content": content_text,
                     })
-
             messages.append({"role": "user", "content": tool_results})
         else:
-            # Unexpected stop reason — return whatever text we have
             for block in response.content:
                 if hasattr(block, "text"):
                     return block.text
             return ""
 
 
-class RunRequest(BaseModel):
-    message: str
-    session_id: Optional[str] = None
-
-
-class RunResponse(BaseModel):
-    run_id: str
-    agent_id: str
-    session_id: str
-    content: str
-    status: str
-
-
-@app.get("/agents")
-def list_agents():
-    return [{"id": "substack-author-agent", "name": "Substack Author Agent", "sdk": "anthropic"}]
-
-
-@app.get("/agents/substack-author-agent/sessions")
-def list_sessions():
-    return [
-        {"session_id": sid, "turns": len([m for m in msgs if m["role"] == "user"])}
-        for sid, msgs in sessions.items()
-    ]
-
-
-@app.post("/agents/substack-author-agent/runs", response_model=RunResponse)
-async def run_agent(request: RunRequest):
-    session_id = request.session_id or str(uuid.uuid4())
-    run_id = str(uuid.uuid4())
-
+async def run(message: str, session_id: str) -> str:
     if session_id not in sessions:
         sessions[session_id] = []
 
-    sessions[session_id].append({"role": "user", "content": request.message})
+    sessions[session_id].append({"role": "user", "content": message})
 
     async with streamable_http_client(MCP_URL) as (read, write, _):
         async with ClientSession(read, write) as mcp_session:
@@ -184,16 +132,4 @@ async def run_agent(request: RunRequest):
             )
 
     sessions[session_id].append({"role": "assistant", "content": response_text})
-
-    return RunResponse(
-        run_id=run_id,
-        agent_id="substack-author-agent",
-        session_id=session_id,
-        content=response_text,
-        status="completed",
-    )
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7778)
+    return response_text
