@@ -18,7 +18,7 @@ _client = track_anthropic(
 sessions: dict[str, list] = {}
 
 
-def _mcp_tool_to_claude(tool) -> dict:
+def _tool_mapping(tool) -> dict:
     return {
         "name": tool.name,
         "description": tool.description or "",
@@ -28,7 +28,7 @@ def _mcp_tool_to_claude(tool) -> dict:
 
 async def _run_agent_loop(history: list[dict], mcp_session: ClientSession) -> str:
     tools_result = await mcp_session.list_tools()
-    claude_tools = [_mcp_tool_to_claude(t) for t in tools_result.tools]
+    claude_tools = [_tool_mapping(t) for t in tools_result.tools]
     messages = list(history)
 
     while True:
@@ -63,7 +63,7 @@ async def _run_agent_loop(history: list[dict], mcp_session: ClientSession) -> st
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
-                    content_text = await _call_mcp_tool(mcp_session, block.name, block.input)
+                    content_text = await _call_tool(mcp_session, block.name, block.input)
                     tool_results.append({
                         "type": "tool_result",
                         "tool_use_id": block.id,
@@ -77,8 +77,9 @@ async def _run_agent_loop(history: list[dict], mcp_session: ClientSession) -> st
             return ""
 
 
-@opik.track(name="mcp_tool_call", type="tool")
-async def _call_mcp_tool(mcp_session: ClientSession, tool_name: str, tool_input: dict) -> str:
+@opik.track(name="tool_call", type="tool")
+async def _call_tool(mcp_session: ClientSession, tool_name: str, tool_input: dict) -> str:
+    opik.update_current_span(name=tool_name)
     result = await mcp_session.call_tool(tool_name, tool_input)
     return "".join(part.text for part in result.content if hasattr(part, "text"))
 
