@@ -15,7 +15,7 @@ from agents.mcp import MCPServerStreamableHttp
 load_dotenv()
 
 MCP_URL = "https://substack-author.fastmcp.app/mcp"
-MODEL = "gpt-4o-mini"
+MODEL = "gpt-5-mini"
 
 SYSTEM_PROMPT = """You are a Substack author agent. Help authors with content strategy using the tools available to you.
 Always format responses in markdown.
