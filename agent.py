@@ -1,57 +1,88 @@
-import os
-from dotenv import load_dotenv
+"""
+Substack Author Agent — interactive CLI
+Usage: python agent.py [--sdk agno|claude|openai]
+"""
+
 import asyncio
-from agno.agent import Agent                                                                                                                                  
-from agno.models.anthropic import Claude                                                                                                                      
-from agno.tools.mcp import MCPTools                                                                                                                           
-from agno.skills import Skills, LocalSkills                                                                                                                   
-from openinference.instrumentation.agno import AgnoInstrumentor  
-from agno.db.in_memory import InMemoryDb                                                                                            
-from opentelemetry import trace as trace_api                                                                                                                  
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter                                                                            
-from opentelemetry.sdk.trace import TracerProvider                                                                                                            
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor  
+import importlib.util
+import os
+import sys
+import uuid
+import typer
 
-load_dotenv()
-claude_api_key = os.getenv("ANTHROPIC_API_KEY")
+app = typer.Typer(add_completion=False)
 
-# Configure the tracer provider
-tracer_provider = TracerProvider()
-tracer_provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
-trace_api.set_tracer_provider(tracer_provider=tracer_provider)
+_here = os.path.dirname(os.path.abspath(__file__))
+_agents_dir = os.path.join(_here, "agents")
 
-# Start instrumenting agno
-AgnoInstrumentor().instrument()
 
-substack_author_mcp = MCPTools(transport="streamable-http", url="https://substack-author.fastmcp.app/mcp")
+def _load(module_name: str, rel_path: str):
+    path = os.path.join(_here, rel_path)
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = mod
+    spec.loader.exec_module(mod)
+    return mod
 
-# Initialize in-memory database for session storage
-db = InMemoryDb()
 
-# Create and configure the agent
-substack_author_agent = Agent(
-    name="Substack Author Agent",
-    id="substack-author-agent",
-    model=Claude(id="claude-haiku-4-5-20251001", api_key=claude_api_key),
-    tools=[substack_author_mcp],
-    db=db,
-    num_history_runs=10,
-    add_history_to_context=True,
-    read_chat_history=True,
-    read_tool_call_history=True,
-    skills=Skills(loaders=[LocalSkills("./skills")]),
-    instructions="You are a Substack author agent. Use your skills to help with content strategy.",
-    markdown=True,
-)
+async def _readline_loop(mod, sdk: str):
+    session_id = str(uuid.uuid4())
+    print("Ask questions about your Substack. Type 'exit' to quit.\n")
 
-def run_agent():
-    return asyncio.run(substack_author_agent.acli_app(stream=True,))
+    connected = False
+    if sdk == "openai":
+        await mod.mcp_server.connect()
+        connected = True
+
+    try:
+        while True:
+            try:
+                user_input = input("You: ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\nGoodbye!")
+                break
+            if user_input.lower() in ("exit", "quit", "q"):
+                print("Goodbye!")
+                break
+            if not user_input:
+                continue
+            response = await mod.run(user_input, session_id)
+            print(f"\nAgent: {response}\n")
+    finally:
+        if connected:
+            await mod.mcp_server.cleanup()
+
+
+@app.command()
+def main(
+    sdk: str = typer.Option("agno", help="SDK to use: agno | claude | openai"),
+):
+    if sdk not in ("agno", "claude", "openai"):
+        typer.echo(f"Invalid SDK '{sdk}'. Choose from: agno, claude, openai")
+        raise typer.Exit(1)
+
+    print(f"\n{'='*60}")
+    print(f"  SUBSTACK AUTHOR AGENT  [{sdk.upper()}]")
+    print(f"{'='*60}\n")
+
+    # Pre-cache installed SDKs, then expose agents/ internals via sys.path
+    import agno as _agno_pkg          # noqa: F401
+    import agents as _openai_agents   # noqa: F401
+    import openai as _openai_pkg      # noqa: F401
+
+    if _agents_dir not in sys.path:
+        sys.path.insert(1, _agents_dir)
+
+    if sdk == "agno":
+        mod = _load("_cli_agno", "agents/agno/agent.py")
+        asyncio.run(mod._agent.acli_app(stream=True))
+    elif sdk == "claude":
+        mod = _load("_cli_claude", "agents/claude/agent.py")
+        asyncio.run(_readline_loop(mod, "claude"))
+    elif sdk == "openai":
+        mod = _load("_cli_openai", "agents/openai/agent.py")
+        asyncio.run(_readline_loop(mod, "openai"))
+
 
 if __name__ == "__main__":
-    print("\n" + "=" * 70)
-    print("SUBSTACK AUTHOR AGENT")
-    print("=" * 70)
-    print("\nAsk questions about Substack content strategy, get helpful answers!")
-    print("=" * 70 + "\n")
-    run_agent()
-
+    app()

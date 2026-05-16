@@ -5,16 +5,18 @@ from agno.models.anthropic import Claude
 from agno.tools.mcp import MCPTools
 from agno.skills import Skills, LocalSkills
 from agno.db.in_memory import InMemoryDb
+from constants import MCP_URL, AGNO_MODEL
+from shared.prompt import AGNO_INSTRUCTIONS
 
 load_dotenv()
 
-_mcp = MCPTools(transport="streamable-http", url="https://substack-author.fastmcp.app/mcp")
+_mcp = MCPTools(transport="streamable-http", url=MCP_URL)
 _db = InMemoryDb()
 
 _agent = Agent(
     name="Substack Author Agent",
     id="substack-author-agent-agno",
-    model=Claude(id="claude-haiku-4-5-20251001", api_key=os.getenv("ANTHROPIC_API_KEY")),
+    model=Claude(id=AGNO_MODEL, api_key=os.getenv("ANTHROPIC_API_KEY")),
     tools=[_mcp],
     db=_db,
     num_history_runs=10,
@@ -22,11 +24,10 @@ _agent = Agent(
     read_chat_history=True,
     read_tool_call_history=True,
     skills=Skills(loaders=[LocalSkills("./skills")]),
-    instructions="You are a Substack author agent. Use your skills to help with content strategy.",
+    instructions=AGNO_INSTRUCTIONS,
     markdown=True,
 )
 
-# Agno manages session history internally via InMemoryDb — no external dict needed
 sessions: dict = {}
 
 

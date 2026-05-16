@@ -1,11 +1,4 @@
-from dotenv import load_dotenv
-from agents import Agent, Runner
-from agents.mcp import MCPServerStreamableHttp
-
-load_dotenv()
-
-MCP_URL = "https://substack-author.fastmcp.app/mcp"
-MODEL = "gpt-5-mini"
+AGNO_INSTRUCTIONS = "You are a Substack author agent. Use your skills to help with content strategy."
 
 SYSTEM_PROMPT = """You are a Substack author agent. Help authors with content strategy using the tools available to you.
 Always format responses in markdown.
@@ -48,28 +41,3 @@ When user asks what to write next, needs topic ideas, or content planning:
 - Fetch performance metrics for ALL articles, not just a few
 - Use relative comparisons since absolute numbers vary by publication size
 """
-
-# Connected once at server lifespan startup
-mcp_server = MCPServerStreamableHttp(
-    params={"url": MCP_URL},
-    cache_tools_list=True,
-    name="substack-author-mcp",
-)
-
-_agent = Agent(
-    name="Substack Author Agent",
-    instructions=SYSTEM_PROMPT,
-    model=MODEL,
-    mcp_servers=[mcp_server],
-)
-
-# session_id -> full conversation history (result.to_input_list())
-sessions: dict[str, list] = {}
-
-
-async def run(message: str, session_id: str) -> str:
-    history = sessions.get(session_id, [])
-    agent_input = history + [{"role": "user", "content": message}] if history else message
-    result = await Runner.run(_agent, input=agent_input)
-    sessions[session_id] = result.to_input_list()
-    return str(result.final_output)

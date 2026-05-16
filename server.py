@@ -15,15 +15,22 @@ from pydantic import BaseModel
 
 load_dotenv()
 
-# Pre-import openai-agents as 'agents' into sys.modules before loading local agents/ files.
-# Without agents/__init__.py the namespace package yields to the real installed package,
-# but caching it here guarantees agents/openai.py's `from agents import ...` resolves correctly.
-import agents as _openai_agents_pkg  # noqa: F401 — side-effect: caches real package in sys.modules
-
 _here = os.path.dirname(os.path.abspath(__file__))
+_agents_dir = os.path.join(_here, "agents")
+
+# Pre-cache installed SDK packages before local subfolders can shadow them.
+# agents/ has no __init__.py so the installed openai-agents regular package wins;
+# same for agno/ and openai/ subfolders inside agents/.
+import agno as _agno_pkg          # noqa: F401
+import agents as _openai_agents   # noqa: F401
+import openai as _openai_pkg      # noqa: F401
+
+# Add agents/ to sys.path so agent files can import constants and shared.prompt
+if _agents_dir not in sys.path:
+    sys.path.insert(1, _agents_dir)
 
 
-def _load_agent(module_name: str, rel_path: str):
+def _load(module_name: str, rel_path: str):
     path = os.path.join(_here, rel_path)
     spec = importlib.util.spec_from_file_location(module_name, path)
     mod = importlib.util.module_from_spec(spec)
@@ -32,9 +39,9 @@ def _load_agent(module_name: str, rel_path: str):
     return mod
 
 
-agno_mod   = _load_agent("_impl_agno",   "agents/agno.py")
-claude_mod = _load_agent("_impl_claude", "agents/claude.py")
-openai_mod = _load_agent("_impl_openai", "agents/openai.py")
+agno_mod   = _load("_impl_agno",   "agents/agno/agent.py")
+claude_mod = _load("_impl_claude", "agents/claude/agent.py")
+openai_mod = _load("_impl_openai", "agents/openai/agent.py")
 
 AGENTS = {
     "agno":   agno_mod,
@@ -43,9 +50,9 @@ AGENTS = {
 }
 
 AGENT_META = [
-    {"id": "agno",   "name": "Substack Author Agent", "sdk": "agno"},
-    {"id": "claude", "name": "Substack Author Agent", "sdk": "anthropic"},
-    {"id": "openai", "name": "Substack Author Agent", "sdk": "openai"},
+    {"id": "agno",   "name": "Substack Author Agent", "sdk": "agno",          "model": "claude-haiku-4-5"},
+    {"id": "claude", "name": "Substack Author Agent", "sdk": "anthropic",     "model": "claude-haiku-4-5"},
+    {"id": "openai", "name": "Substack Author Agent", "sdk": "openai-agents", "model": "gpt-5-mini"},
 ]
 
 
@@ -94,7 +101,6 @@ async def run_agent(agent_id: str, request: RunRequest):
 
     session_id = request.session_id or str(uuid.uuid4())
     run_id = str(uuid.uuid4())
-
     content = await AGENTS[agent_id].run(request.message, session_id)
 
     return RunResponse(

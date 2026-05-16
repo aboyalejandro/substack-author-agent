@@ -1,21 +1,22 @@
 # API Reference
 
-The agent runs as a REST API via [AgentOS](https://docs.agno.com/agent-os/introduction) on `http://localhost:7777`.
-
-## Setup
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env  # fill in your keys
-```
+The agent runs as a unified REST API on `http://localhost:7777` with three implementations selectable via `agent_id`.
 
 ## Start the server
 
 ```bash
 python server.py
 ```
+
+## Agents
+
+| `agent_id` | SDK | Model |
+|---|---|---|
+| `agno` | Agno framework | Claude Haiku 4.5 |
+| `claude` | Anthropic SDK (manual loop) | Claude Haiku 4.5 |
+| `openai` | OpenAI Agents SDK | GPT-5 Mini |
+
+---
 
 ## Endpoints
 
@@ -25,69 +26,98 @@ python server.py
 curl http://localhost:7777/agents
 ```
 
-### Run the agent
-
-```bash
-curl -X POST http://localhost:7777/agents/substack-author-agent/runs \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "message=Analyze my latest articles"
+```json
+[
+  {"id": "agno",   "name": "Substack Author Agent", "sdk": "agno",         "model": "claude-haiku-4-5"},
+  {"id": "claude", "name": "Substack Author Agent", "sdk": "anthropic",    "model": "claude-haiku-4-5"},
+  {"id": "openai", "name": "Substack Author Agent", "sdk": "openai-agents","model": "gpt-5-mini"}
+]
 ```
 
-### Run with streaming
+---
+
+### Run an agent
 
 ```bash
-curl -X POST http://localhost:7777/agents/substack-author-agent/runs \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "message=Analyze my latest articles" \
-  -d "stream=true"
+curl -X POST http://localhost:7777/agents/{agent_id}/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message": "How are my latest articles doing?"}'
 ```
+
+**Examples:**
+
+```bash
+# Agno
+curl -X POST http://localhost:7777/agents/agno/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Analyze my latest articles"}'
+
+# Claude SDK
+curl -X POST http://localhost:7777/agents/claude/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Analyze my latest articles"}'
+
+# OpenAI Agents SDK
+curl -X POST http://localhost:7777/agents/openai/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Analyze my latest articles"}'
+```
+
+**Response:**
+
+```json
+{
+  "run_id": "3f2a1b...",
+  "agent_id": "claude",
+  "session_id": "auto-generated-uuid",
+  "content": "## Article Performance\n...",
+  "status": "completed"
+}
+```
+
+---
 
 ### Maintain session context
 
 Pass a consistent `session_id` to keep conversation history across requests:
 
 ```bash
-curl -X POST http://localhost:7777/agents/substack-author-agent/runs \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "message=What were my top articles last month?" \
-  -d "session_id=my-session-123"
+curl -X POST http://localhost:7777/agents/claude/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What were my top articles last month?", "session_id": "my-session-123"}'
 
-curl -X POST http://localhost:7777/agents/substack-author-agent/runs \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "message=Now generate 3 content ideas based on those." \
-  -d "session_id=my-session-123"
+curl -X POST http://localhost:7777/agents/claude/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Generate 3 content ideas based on those.", "session_id": "my-session-123"}'
 ```
+
+**Session storage per agent:**
+
+| Agent | How history is stored |
+|---|---|
+| `agno` | InMemoryDb (managed by Agno internally) |
+| `claude` | In-memory dict — text-only user/assistant pairs |
+| `openai` | In-memory dict — full input list (`result.to_input_list()`) |
+
+---
 
 ### List sessions
 
 ```bash
-curl http://localhost:7777/agents/substack-author-agent/sessions
+curl http://localhost:7777/agents/claude/sessions
 ```
-
-## Response format
 
 ```json
-{
-  "run_id": "...",
-  "agent_id": "substack-author-agent",
-  "session_id": "...",
-  "content": "Agent response here...",
-  "status": "COMPLETED",
-  "metrics": {
-    "input_tokens": 2787,
-    "output_tokens": 443,
-    "total_tokens": 3230
-  }
-}
+[
+  {"session_id": "my-session-123", "turns": 2}
+]
 ```
 
-## Authentication
+---
 
-Disabled by default. To enable, set `OS_SECURITY_KEY` in `.env` and pass it as a Bearer token:
+## Request body
 
-```bash
-curl -X POST http://localhost:7777/agents/substack-author-agent/runs \
-  -H "Authorization: Bearer <your-key>" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "message=Analyze my latest articles"
-```
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `message` | string | ✅ | User message |
+| `session_id` | string | ❌ | Pass same value across requests to maintain context. Auto-generated if omitted. |
