@@ -1,9 +1,19 @@
 from dotenv import load_dotenv
-from agents import Agent, Runner, add_trace_processor, tracing as agents_tracing
+from agents import Agent, Runner, add_trace_processor, tracing as agents_tracing, function_tool
 from agents.mcp import MCPServerStreamableHttp
 from opik.integrations.openai.agents import OpikTracingProcessor
 from constants import MCP_URL, OPENAI_MODEL
 from shared.prompt import SYSTEM_PROMPT
+from shared.skills import get_skill_instructions as _get_skill_instructions
+
+
+@function_tool
+def get_skill_instructions(skill_name: str) -> str:
+    """
+    Load instructions for a skill by name. Call this FIRST when the user's request
+    matches one of the available skills before using any other tools.
+    """
+    return _get_skill_instructions(skill_name)
 
 load_dotenv()
 
@@ -35,6 +45,7 @@ _agent = Agent(
     name="Substack Author Agent",
     instructions=SYSTEM_PROMPT,
     model=OPENAI_MODEL,
+    tools=[get_skill_instructions],
     mcp_servers=[mcp_server],
 )
 
