@@ -77,7 +77,7 @@ python agent.py --sdk openai
 |---|---|---|---|
 | `agno` | Agno framework | claude-haiku-4-5 | AgnoInstrumentor → OTLP → Opik |
 | `claude` | Anthropic SDK (manual loop) | claude-haiku-4-5 | track_anthropic + @opik.track |
-| `openai` | OpenAI Agents SDK | gpt-5-mini | _CleanOpikProcessor (filters MCPListToolsSpan) |
+| `openai` | OpenAI Agents SDK | gpt-5.4-nano | _CleanOpikProcessor (filters MCPListToolsSpan) |
 
 ## Key files
 
