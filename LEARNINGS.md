@@ -112,6 +112,52 @@ Branch 3 first `edd-run` attempt: judges scored 13/13, then `client.create_exper
 
 ## E. Scenario design
 
+### L19 — Per-SDK prompt divergence is a silent regression vector
+
+**Symptom:** Codex P2 on PR #7 flagged that `agents/agno/agent.py:37` passes `AGNO_INSTRUCTIONS` (a one-sentence constant) to the Agno runtime, while `agents/claude/agent.py` and `agents/openai/agent.py` both use `SYSTEM_PROMPT` (derived from `_BASE`). All four prior PRs (#4 temporal-scoping, #5 cross-article-comparison, #6 search-intent-specificity, #7 multi-turn-coherence) added rules to `_BASE` only. So Claude + OpenAI got every fix; Agno got none. Switching the eval endpoint to `/agents/agno/runs` would have silently reintroduced every regression we just fixed.
+
+**Why the framework didn't catch it:** EDD runs against a single `AGENT_ENDPOINT` per session — by design, since the integration contract is HTTP-level. There's no awareness that this endpoint is one of three SDK implementations sharing a project, prompt module, and tool surface.
+
+**Implication for the EDD skill:**
+- `edd:scope-agent` walks the agent source to extract promises (per [`scope-agent/SKILL.md`](../eval-driven-development/skills/scope-agent/SKILL.md)). It should also enumerate the **prompt-injection paths** — every place a system prompt or instruction string is fed into the runtime — and warn when those paths diverge. A pattern like *"agno reads AGNO_INSTRUCTIONS, claude reads SYSTEM_PROMPT, openai reads SYSTEM_PROMPT — these are different constants"* should land in `.edd/promises.md` as a structural warning.
+- When the operator picks an `AGENT_ENDPOINT`, `edd check` could grep the repo for sibling endpoints and warn: *"3 endpoints found, only 1 selected — your fix may not propagate to the others. See agents/{agno,claude,openai}/agent.py for divergence."*
+- Long-term: `regressions.txt` should be fired against every SDK in turn, not just the chosen one. The cost is 3× but catches exactly this class of bug.
+
+### L20 — Self-referential baseline trap when writing prompt rules
+
+**Symptom:** My initial fix on PR #7 said *"anchor the answer to the publication baseline computed over the same set the user is asking about"*. Codex P1 caught it immediately: when the user asks to compare a subset (or single item) against the publication average, computing the "baseline" over the same set is self-comparison, which always yields parity and systematically breaks Relative Grounding and Metric Accuracy. A correct rule has to specify a *distinct, broader* reference set than the subject of comparison.
+
+**Why this matters for the EDD skill:** Codex is doing the work an evaluator-of-evaluators would do — sanity-checking the *judge prompt*, not just the agent prompt. The framework currently has `references/evaluator-selection.md` and `validate-evaluator` (from the evals-skills plugin), but neither catches a rule that scores trivially well (because every result is parity = "anchored", judge gives full credit). A judge that always scores 1.0 on a class of inputs is just as broken as one that always scores 0.0.
+
+**Port-back action:** add a "sanity question" to `scope-evals` Step 4: *"For each judge prompt, name one query where this judge would trivially return parity / full credit / zero credit. If you can name one, harden the rubric to disambiguate."*
+
+### L21 — Per-SDK enrichers should be shipped templates, not docstring comments
+
+**Symptom:** When Branch 4 had to pivot to the OpenAI Agents SDK (Anthropic key capped per L17), I had to hand-write `_local/enrich_traces_openai.py` from scratch — adapting the OpenInference-style enricher in `references/trace-enrichment.md` for OpenAI's specific trace shape: `input.input = [{role, content}, {type: 'function_call', ...}]`, `output.output = [{content: [{text}]}]`, and the `created_from == 'openai-agents'` discriminator.
+
+The reference doc has the right knowledge encoded as Python-comment hints:
+```python
+# OpenAI Agents SDK:
+# user_message = (trace_input.get("input") or [{}])[0].get("content", "")
+# assistant_response = extract_openai_response(trace.get("output") or {})
+```
+
+But the operator has to translate those hints into a runnable script that handles edge cases (content as string vs list, multi-turn history accumulation, function-call entries in the input array, tool argument extraction). That's 80 lines of code, ~30 min of reading the actual trace shape, and an opportunity to misread the contract.
+
+**Port-back action:** ship `_local/enrich_traces_anthropic.py`, `_local/enrich_traces_openai_agents.py`, `_local/enrich_traces_agno.py` as starter templates under `references/enrichers/` (or `examples/enrichers/`). Operators copy + modify. Reduces enrichment-time bugs and shortens the time-to-first-trace.
+
+### L22 — Multi-turn OpenAI Agents SDK accumulates history in `input.input`
+
+**Symptom:** Each turn POST to `/agents/openai/runs` produces one Opik trace, but the trace's `input.input` field is a **list containing the full conversation up to that turn** (prior user messages, assistant responses, tool calls — all interleaved). Turn 2 of a 2-turn scenario shows BOTH turn-1's user message AND turn-2's, with function calls between them.
+
+For enrichment this means **the trigger message is always the *last* `role=user` entry, not the first**. Getting this wrong:
+- `users[0]` → enriches every turn-N trace with turn-1's user message → judges score the same scenario over and over.
+- `users[-1]` → correct: each trace gets the message that actually triggered it.
+
+This contrasts with the Anthropic SDK (`track_anthropic`), where each trace's `input` is just the current turn's message — no history accumulation in the trace itself.
+
+**Implication:** `references/trace-enrichment.md` should make this explicit. The current SDK-pattern table covers shape but not multi-turn semantics — "OpenAI Agents SDK accumulates conversation history in input.input; use the last role=user entry per trace" is the missing line.
+
 ### L18 — `OpikClient.search_traces` returns inconsistent counts across calls
 
 **Symptom:** Repeatedly calling `search_traces(project, from_time=<X>)` with the same arguments seconds apart returned wildly different results. One trace within minutes:
