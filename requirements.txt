@@ -7,5 +7,7 @@ typer
 python-dotenv                                                                                                                                                 
 opentelemetry-sdk                                                                                                                                             
 opentelemetry-exporter-otlp                                                                                                                                   
-openinference-instrumentation-agno 
+openinference-instrumentation-agno
 fastmcp
+openai-agents
+starlette<0.49
