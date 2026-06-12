@@ -2,7 +2,7 @@
 
 A Substack content strategy agent built **three ways** — using [Agno](https://docs.agno.com/), the [Anthropic SDK](https://docs.anthropic.com/), and the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) — all served from a single FastAPI endpoint and traced with [Opik](https://www.comet.com/docs/opik/).
 
-Data comes from the [Substack Author MCP](https://substack-author.fastmcp.app/mcp) server. Logic comes from five content skills.
+Data comes from the [Substack Author MCP](https://substack-author.fastmcp.app/mcp) server. Logic comes from the content skills the same server exposes as MCP resources.
 
 ## What's possible
 
@@ -25,7 +25,7 @@ Data comes from the [Substack Author MCP](https://substack-author.fastmcp.app/mc
 
 ## Skills
 
-Five skills loaded from `skills/` — used natively by Agno, compiled into the system prompt for Claude and OpenAI:
+Six skills fetched from the MCP server's resources (`skill://<name>/SKILL.md`) at startup — loaded natively by Agno via a custom `MCPSkills` loader, exposed as a `get_skill_instructions` tool for Claude and OpenAI:
 
 | Skill | When it activates |
 |-------|-------------------|
@@ -34,6 +34,7 @@ Five skills loaded from `skills/` — used natively by Agno, compiled into the s
 | `analyze-comments` | "What are readers saying?" |
 | `content-ideas` | "What should I write next?" |
 | `brand-voice` | "What's my writing style?" |
+| `visual-brand` | "Generate a cover image prompt" |
 
 ## Observability
 
@@ -86,10 +87,10 @@ python agent.py --sdk openai
 agents/
 ├── constants.py          # MCP_URL + model names
 ├── shared/prompt.py      # shared system prompt
+├── shared/skills.py      # fetches skills from MCP resources
 ├── agno/agent.py
 ├── claude/agent.py
 └── openai/agent.py
-skills/                   # 5 SKILL.md files
 server.py                 # unified FastAPI :7777
 agent.py                  # CLI picker
 CLAUDE.md                 # Claude Code guide + run instructions
