@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  /* Palette cloned from substackrecapped.com */
+  --color-neon-pink: #ff006e;
+  --color-neon-blue: #0066ff;
+  --color-neon-green: #00ff88;
+  --color-neon-purple: #9d00ff;
+  --color-neon-yellow: #ffe500;
+  --color-substack-orange: #ff6719;
+  --color-dark-bg: #0a0a0a;
+  --color-dark-card: #1a1a1a;
+
+  --font-sans: var(--font-inter), Inter, system-ui, sans-serif;
+}
+
+/* Custom scrollbar (cloned from substackrecapped.com) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #ff006e 0%, #ff6719 50%, #ffe500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card gradient border */
+.gradient-border {
+  position: relative;
+  border-radius: 1rem;
+  padding: 2px;
+  background: linear-gradient(135deg, #ff006e, #0066ff, #00ff88);
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: #1a1a1a;
+  border-radius: calc(1rem - 2px);
+  z-index: -1;
+}
+
+/* CopilotKit v2 dark theme: activated by the `dark` class on the chat root
+   (its components carry `cpk:dark:*` variants gated on `:is(.dark *)`). */
+.sa-chat {
+  height: 100%;
+}
+
+.sa-chat textarea,
+.sa-chat input[type="text"] {
+  background: transparent;
+  color: inherit;
+}
+
+.sa-chat a {
+  color: #ff6719;
+}
