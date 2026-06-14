@@ -4,8 +4,7 @@ import {
   CopilotChat,
   useConfigureSuggestions,
 } from "@copilotkit/react-core/v2";
-import { useCallback } from "react";
-import ToolCallsView from "./ToolCallsView";
+import AssistantMessage from "./AssistantMessage";
 
 const PUBLICATION_URL =
   process.env.NEXT_PUBLIC_PUBLICATION_URL ??
@@ -34,43 +33,10 @@ export default function Chat() {
     []
   );
 
-  // Dynamic follow-up actions generated after every assistant message
-  useConfigureSuggestions(
-    {
-      instructions:
-        "Suggest the most relevant next content-strategy actions based on the conversation so far: drilling into a specific article's performance, comparing notes vs articles, extracting brand voice, generating content ideas, or reviewing cover images. Keep each suggestion short and actionable.",
-      minSuggestions: 2,
-      maxSuggestions: 3,
-      available: "after-first-message",
-    },
-    []
-  );
-
-  // Read the assistant message aloud via the browser's speech synthesis.
-  const onReadAloud = useCallback((message: any) => {
-    const text = (message?.content ?? "").trim();
-    if (!text || typeof window === "undefined" || !window.speechSynthesis) return;
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-      return;
-    }
-    window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-  }, []);
-
-  const onThumbsUp = useCallback(() => {}, []);
-  const onThumbsDown = useCallback(() => {}, []);
-
   return (
     <CopilotChat
       className="sa-chat dark h-full"
-      messageView={{
-        assistantMessage: {
-          toolCallsView: ToolCallsView,
-          onReadAloud,
-          onThumbsUp,
-          onThumbsDown,
-        },
-      }}
+      messageView={{ assistantMessage: AssistantMessage as any }}
       attachments={{
         enabled: true,
         accept: "image/*,application/pdf,text/*,.md",

@@ -94,5 +94,76 @@ agent_os = AgentOS(agents=[agent], interfaces=[AGUI(agent=agent)])
 app = agent_os.get_app()
 
 
+# --- Follow-up suggestions endpoint -----------------------------------------
+# CopilotKit's built-in dynamic suggestions rely on the agent calling a frontend
+# tool, but Agno's AG-UI router drops run_input.tools (see memory) — so the Agno
+# agent can't generate them. Instead the frontend POSTs the conversation here and
+# we generate one-click follow-ups with a single forced-tool Claude call.
+from anthropic import Anthropic  # noqa: E402
+from constants import CLAUDE_MODEL  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
+
+_anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+_SUGGEST_TOOL = {
+    "name": "suggest_followups",
+    "description": "Return the most relevant one-click follow-up actions.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "suggestions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "2-3 short, actionable follow-up prompts (max ~8 words each).",
+            }
+        },
+        "required": ["suggestions"],
+    },
+}
+
+
+class _SuggestMessage(BaseModel):
+    role: str
+    content: str
+
+
+class _SuggestRequest(BaseModel):
+    messages: list[_SuggestMessage]
+
+
+@app.post("/suggestions")
+def suggestions(req: _SuggestRequest):
+    transcript = "\n".join(f"{m.role}: {m.content}" for m in req.messages if m.content)
+    if not transcript.strip():
+        return {"suggestions": []}
+
+    message = _anthropic.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=256,
+        tool_choice={"type": "tool", "name": "suggest_followups"},
+        tools=[_SUGGEST_TOOL],
+        messages=[
+            {
+                "role": "user",
+                "content": (
+                    "You are a Substack content-strategy copilot. Based on the "
+                    "conversation so far, propose the most relevant next actions "
+                    "the user might take (drill into an article's performance, "
+                    "compare notes vs articles, extract brand voice, generate "
+                    "content ideas, review cover images). Keep each short and "
+                    f"actionable.\n\nConversation:\n{transcript}"
+                ),
+            }
+        ],
+    )
+    for block in message.content:
+        if block.type == "tool_use":
+            return {"suggestions": block.input.get("suggestions", [])[:3]}
+    return {"suggestions": []}
+
+
+# ---------------------------------------------------------------------------
+
+
 if __name__ == "__main__":
     agent_os.serve(app="agui_server:app", host="0.0.0.0", port=8000)
