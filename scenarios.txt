@@ -1,0 +1,15 @@
+{"message": "Find the top 5 Substack articles about Python tutorials specifically for beginners", "evaluators": ["Semantic Search Accuracy", "Content Completeness", "Response Directness"]}
+{"message": "Search for the top 5 posts about AI safety published in the last 30 days", "evaluators": ["Semantic Search Accuracy", "Content Completeness", "Skill Selection Correctness"]}
+{"message": "Find 5 newsletter issues about building B2B SaaS products from scratch", "evaluators": ["Semantic Search Accuracy", "Content Completeness", "Response Directness"]}
+{"message": "Search for the top 5 most-read Substack posts on stoicism this week", "evaluators": ["Semantic Search Accuracy", "Ranking Quality", "Content Completeness"]}
+{"message": "Find 5 articles similar to mine about productivity systems for developers", "evaluators": ["Semantic Search Accuracy", "Relative Grounding", "Content Completeness"]}
+{"message": "Search for 5 posts about LLM fine-tuning written by indie researchers", "evaluators": ["Semantic Search Accuracy", "Content Completeness", "Skill Selection Correctness"]}
+{"message": "Find 5 newsletters that cover both mental models and tech career advice", "evaluators": ["Semantic Search Accuracy", "Content Completeness", "Response Directness"]}
+{"message": "Search for 5 Substack posts that went viral specifically about startup failure stories", "evaluators": ["Semantic Search Accuracy", "Content Completeness", "Relative Grounding"]}
+{"message": "Find 5 articles about remote work published between January and March 2025", "evaluators": ["Semantic Search Accuracy", "Content Completeness", "Skill Selection Correctness"]}
+{"message": "Search for the top 5 posts about note-taking systems with at least 1000 likes", "evaluators": ["Semantic Search Accuracy", "Metric Accuracy", "Content Completeness"]}
+{"message": "Find 5 newsletters similar to mine in the AI tools niche", "evaluators": ["Semantic Search Accuracy", "Relative Grounding", "Content Completeness", "Response Directness"]}
+{"message": "Search for the top 5 Substack posts about personal finance for freelancers", "evaluators": ["Semantic Search Accuracy", "Ranking Quality", "Content Completeness"]}
+{"message": "Find 5 posts about machine learning that are aimed at non-technical audiences", "evaluators": ["Semantic Search Accuracy", "Content Completeness", "Skill Selection Correctness"]}
+{"message": "Search for 5 Substack newsletters that cover both design and engineering", "evaluators": ["Semantic Search Accuracy", "Content Completeness", "Response Directness"]}
+{"message": "Find 5 articles about writing habits published by authors with over 10k subscribers", "evaluators": ["Semantic Search Accuracy", "Metric Accuracy", "Content Completeness", "Skill Selection Correctness"]}
