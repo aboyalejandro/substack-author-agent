@@ -9,7 +9,7 @@ from openinference.instrumentation.agno import AgnoInstrumentor
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from constants import MCP_URL, AGNO_MODEL
 from shared.prompt import AGNO_INSTRUCTIONS
 from shared.skills import SKILLS
@@ -33,17 +33,24 @@ class MCPSkills(SkillLoader):
 
 
 _tracer_provider = TracerProvider()
-_tracer_provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
+# Batch export keeps span delivery off the event loop — a slow/unreachable
+# OTLP endpoint must not stall AG-UI streaming
+_tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
 trace_api.set_tracer_provider(tracer_provider=_tracer_provider)
 AgnoInstrumentor().instrument()
 
-_mcp = MCPTools(transport="streamable-http", url=MCP_URL)
+_mcp = MCPTools(transport="streamable-http", url=MCP_URL, timeout_seconds=60)
 _db = InMemoryDb()
 
 _agent = Agent(
     name="Substack Author Agent",
     id="substack-author-agent-agno",
-    model=Claude(id=AGNO_MODEL, api_key=os.getenv("ANTHROPIC_API_KEY")),
+    model=Claude(
+        id=AGNO_MODEL,
+        api_key=os.getenv("ANTHROPIC_API_KEY"),
+        # Extended thinking surfaces as AG-UI THINKING_* events in the CopilotKit UI
+        thinking={"type": "enabled", "budget_tokens": 2048},
+    ),
     tools=[_mcp],
     db=_db,
     num_history_runs=10,

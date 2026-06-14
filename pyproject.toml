@@ -19,6 +19,8 @@ dependencies = [
     "openinference-instrumentation-agno",
     "fastmcp",
     "opik",
+    "ag-ui-protocol",
+    "jsonpatch",
 ]
 
 [project.optional-dependencies]
