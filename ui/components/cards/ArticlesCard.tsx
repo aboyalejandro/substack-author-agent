@@ -6,7 +6,7 @@ import CardShell from "./CardShell";
 import { useSendFollowUp } from "../useSendFollowUp";
 import { formatDate } from "../lib";
 
-const PREVIEW_COUNT = 5;
+const PREVIEW_COUNT = 3;
 
 interface Article {
   article_title: string;
