@@ -41,11 +41,11 @@ export default function AssistantMessage(props: any) {
       <CopilotChatAssistantMessage
         {...props}
         toolCallsView={ToolCallsView}
+        markdownRenderer={{ controls: { code: false, table: false } }}
         onReadAloud={readAloud}
         onThumbsUp={noop}
         onThumbsDown={noop}
         toolbarVisible={showExtras}
-        copyButton={showExtras ? undefined : () => null}
       />
       {showExtras && (
         <FollowUpChips key={props.message.id} messages={messages} />

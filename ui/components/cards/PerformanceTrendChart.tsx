@@ -58,9 +58,17 @@ export default function PerformanceTrendChart({
 
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={points} margin={{ top: 4, right: 8, bottom: 0, left: 0 }} barCategoryGap="20%">
+          <BarChart data={points} margin={{ top: 4, right: 8, bottom: 16, left: 0 }} barCategoryGap="20%">
             <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-            <XAxis dataKey="name" {...CHART_AXIS} interval={0} />
+            <XAxis
+              dataKey="name"
+              {...CHART_AXIS}
+              interval={0}
+              angle={-35}
+              textAnchor="end"
+              height={48}
+              tickMargin={8}
+            />
             <YAxis {...CHART_Y_AXIS} />
             <Tooltip
               {...CHART_TOOLTIP}

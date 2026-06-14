@@ -13,6 +13,7 @@ import { useSendFollowUp } from "./useSendFollowUp";
 export default function FollowUpChips({ messages }: { messages: any[] }) {
   const send = useSendFollowUp();
   const [items, setItems] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -25,7 +26,10 @@ export default function FollowUpChips({ messages }: { messages: any[] }) {
         content: typeof m.content === "string" ? m.content : "",
       }))
       .filter((m) => m.content);
-    if (tail.length === 0) return;
+    if (tail.length === 0) {
+      setLoading(false);
+      return;
+    }
 
     fetch("/api/suggestions", {
       method: "POST",
@@ -34,8 +38,24 @@ export default function FollowUpChips({ messages }: { messages: any[] }) {
     })
       .then((r) => r.json())
       .then((d) => setItems(Array.isArray(d?.suggestions) ? d.suggestions : []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [messages]);
+
+  // Placeholder chips while the suggestion call is in flight — the round-trip is
+  // ~1-2s, so showing skeletons keeps the toolbar from looking unfinished.
+  if (loading)
+    return (
+      <div className="flex flex-wrap gap-2 px-1 pb-1">
+        {[28, 36, 24].map((w, i) => (
+          <span
+            key={i}
+            className="h-7 animate-pulse rounded-full bg-white/5"
+            style={{ width: `${w}%` }}
+          />
+        ))}
+      </div>
+    );
 
   if (items.length === 0) return null;
 

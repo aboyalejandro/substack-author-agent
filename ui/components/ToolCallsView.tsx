@@ -63,8 +63,13 @@ export default function ToolCallsView({
   // conversation — the performance result carries no date/title, and the article
   // list is usually fetched in an earlier turn (a separate message).
   const articleMeta = new Map<string, { date?: string; title?: string }>();
-  let perfResultCount = 0;
+  let perfCallCount = 0;
   for (const m of messages ?? []) {
+    if (m.role === "assistant") {
+      for (const tc of m.toolCalls ?? [])
+        if (PERF_TOOLS.has(toolName(tc))) perfCallCount += 1;
+      continue;
+    }
     if (m.role !== "tool") continue;
     const parsed = parseToolResult(m.content);
     for (const a of parsed?.articles ?? []) {
@@ -74,12 +79,10 @@ export default function ToolCallsView({
           title: a.article_title,
         });
     }
-    if (parsed?.reaction_count !== undefined && !parsed.articles && !parsed.notes)
-      perfResultCount += 1;
   }
   // When the conversation ends up rendering a comparison chart, the standalone
   // "Latest articles" list was just a precursor to fetch the URLs — hide it.
-  const suppressArticleList = perfResultCount > TREND_THRESHOLD;
+  const suppressArticleList = perfCallCount > TREND_THRESHOLD;
 
   const perfSteps = steps.filter((s) => s.complete && PERF_TOOLS.has(s.name));
   const perfPoints: TrendPoint[] = perfSteps.map((step, idx) => {
