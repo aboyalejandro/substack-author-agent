@@ -71,6 +71,25 @@ python agent.py --sdk claude
 python agent.py --sdk openai
 ```
 
+## Run the visual UI (CopilotKit + AG-UI)
+
+Two processes:
+
+```bash
+# 1. AG-UI backend — Agno agent via AgentOS, endpoint POST /agui
+source .venv/bin/activate
+python agui_server.py            # http://localhost:8000
+
+# 2. Next.js frontend with CopilotKit
+cd ui && npm run dev             # http://localhost:3000
+```
+
+Features: all tool activity compressed into one collapsed "Steps" accordion per message (`ui/components/ToolCallsView.tsx`, wired via CopilotKit's `messageView.assistantMessage.toolCallsView` slot) with rich reporting cards below for articles/notes/performance (recharts); raw tool data is never shown. Transparent thinking (Claude extended thinking → AG-UI `REASONING_*` events), dynamic follow-up suggestions after each message, and file attachments. Visual theme cloned from substackrecapped.com (dark + neon palette).
+
+> **Never run `npm run build` while `npm run dev` is serving the same `ui/` dir.** The build overwrites the live dev server's `.next` assets, so the served HTML points at CSS hashes the build replaced → 404 → unstyled page. To verify a production build, stop `next dev` first (or build in a separate checkout).
+
+`agui_server.py` includes a "native thinking bridge": Agno streams Claude thinking deltas as `RunContentEvent.reasoning_content`, but its AG-UI translator only maps `ReasoningContentDeltaEvent` — the bridge re-tags those chunks (and closes the session with `ReasoningCompletedEvent`) so CopilotKit renders the thinking bubble. Remove it if agno fixes this upstream.
+
 ## Agent IDs and SDKs
 
 | agent_id | SDK | Model | Observability |
@@ -88,9 +107,12 @@ python agent.py --sdk openai
 | `agents/constants.py` | MCP_URL + model names |
 | `agents/shared/prompt.py` | SYSTEM_PROMPT (claude + openai) + AGNO_INSTRUCTIONS |
 | `agents/shared/skills.py` | Fetches skills from MCP resources (`skill://<name>/SKILL.md`) at import time |
-| `agents/agno/agent.py` | Agno implementation (custom `MCPSkills` SkillLoader) |
+| `agents/agno/agent.py` | Agno implementation (custom `MCPSkills` SkillLoader, extended thinking enabled) |
 | `agents/claude/agent.py` | Anthropic SDK implementation |
 | `agents/openai/agent.py` | OpenAI Agents SDK implementation |
+| `agui_server.py` | AG-UI backend (AgentOS + AGUI interface, port 8000) + native thinking bridge |
+| `ui/` | Next.js + CopilotKit v2 frontend (port 3000) — runtime route at `ui/app/api/copilotkit/` |
+| `ui/components/ToolRenderers.tsx` | Generative UI: one renderer per MCP tool + wildcard fallback |
 
 ## Import trick (important)
 
@@ -104,4 +126,11 @@ OPENAI_API_KEY        — required for openai
 OTEL_EXPORTER_OTLP_*  — Opik OTLP for agno
 OPIK_API_KEY          — Opik native client for claude + openai
 OPIK_WORKSPACE        — Opik workspace (default: default)
+```
+
+UI (`ui/.env.local`, see `ui/.env.example`):
+
+```
+AGNO_AGUI_URL                 — AG-UI backend URL (default http://localhost:8000/agui)
+NEXT_PUBLIC_PUBLICATION_URL   — your Substack URL, used in starter suggestions
 ```
