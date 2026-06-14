@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import ArticlesCard from "./cards/ArticlesCard";
 import NotesCard from "./cards/NotesCard";
 import PerformanceCard from "./cards/PerformanceCard";
-import { parseToolResult, TOOL_META } from "./lib";
+import PerformanceTrendChart, {
+  type TrendPoint,
+} from "./cards/PerformanceTrendChart";
+import { formatDate, parseToolResult, TOOL_META } from "./lib";
 
-/** Tool calls whose result is worth a rich reporting card. */
-const CARD_TOOLS = new Set([
-  "get_substack_articles",
-  "get_substack_notes",
-  "get_article_performance",
-]);
+/** Per-item performance lookups — aggregated into one trend chart past this count. */
+const PERF_TOOLS = new Set(["get_article_performance", "get_note_performance"]);
+const TREND_THRESHOLD = 3;
 
 // AG-UI tool calls are OpenAI-shaped ({ function: { name, arguments } }); some
 // CopilotKit paths flatten them to { name, args }. Read whichever is present.
@@ -58,6 +58,47 @@ export default function ToolCallsView({
       result: toolMessage ? parseToolResult(toolMessage.content) : undefined,
     };
   });
+
+  // Map article URL -> { date, title } from any articles result anywhere in the
+  // conversation — the performance result carries no date/title, and the article
+  // list is usually fetched in an earlier turn (a separate message).
+  const articleMeta = new Map<string, { date?: string; title?: string }>();
+  let perfResultCount = 0;
+  for (const m of messages ?? []) {
+    if (m.role !== "tool") continue;
+    const parsed = parseToolResult(m.content);
+    for (const a of parsed?.articles ?? []) {
+      if (a?.article_link)
+        articleMeta.set(a.article_link, {
+          date: a.published_at,
+          title: a.article_title,
+        });
+    }
+    if (parsed?.reaction_count !== undefined && !parsed.articles && !parsed.notes)
+      perfResultCount += 1;
+  }
+  // When the conversation ends up rendering a comparison chart, the standalone
+  // "Latest articles" list was just a precursor to fetch the URLs — hide it.
+  const suppressArticleList = perfResultCount > TREND_THRESHOLD;
+
+  const perfSteps = steps.filter((s) => s.complete && PERF_TOOLS.has(s.name));
+  const perfPoints: TrendPoint[] = perfSteps.map((step, idx) => {
+    const url = step.args?.article_url ?? step.args?.note_url ?? step.args?.url;
+    const meta = url ? articleMeta.get(url) : undefined;
+    const title =
+      meta?.title ?? step.result?.title ?? step.result?.description ?? `Item ${idx + 1}`;
+    return {
+      name: meta?.date ? formatDate(meta.date) : title.slice(0, 18),
+      title,
+      reactions: step.result?.reaction_count ?? 0,
+      restacks: step.result?.restacks ?? 0,
+      comments: step.result?.comment_count ?? step.result?.comments ?? 0,
+      _date: meta?.date,
+    } as TrendPoint & { _date?: string };
+  });
+  perfPoints.sort((a: any, b: any) =>
+    a._date && b._date ? a._date.localeCompare(b._date) : 0
+  );
 
   const done = steps.filter((s) => s.complete).length;
   const running = done < steps.length;
@@ -137,19 +178,28 @@ export default function ToolCallsView({
       </div>
 
       {steps.map((step) => {
-        if (!step.complete || !CARD_TOOLS.has(step.name)) return null;
+        if (!step.complete) return null;
         if (step.name === "get_substack_articles")
-          return <ArticlesCard key={step.id} data={step.result} />;
+          return suppressArticleList ? null : (
+            <ArticlesCard key={step.id} data={step.result} />
+          );
         if (step.name === "get_substack_notes")
           return <NotesCard key={step.id} data={step.result} />;
-        return (
+        return null;
+      })}
+
+      {/* Up to 3 specific items → detailed deep-dive cards; more → one trend chart. */}
+      {perfSteps.length > TREND_THRESHOLD ? (
+        <PerformanceTrendChart points={perfPoints} />
+      ) : (
+        perfSteps.map((step) => (
           <PerformanceCard
             key={step.id}
             data={step.result}
             articleUrl={step.args?.article_url}
           />
-        );
-      })}
+        ))
+      )}
     </div>
   );
 }

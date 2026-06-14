@@ -45,6 +45,7 @@ export default function AssistantMessage(props: any) {
         onThumbsUp={noop}
         onThumbsDown={noop}
         toolbarVisible={showExtras}
+        copyButton={showExtras ? undefined : () => null}
       />
       {showExtras && (
         <FollowUpChips key={props.message.id} messages={messages} />
