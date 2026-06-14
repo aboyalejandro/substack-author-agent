@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -31,12 +32,18 @@ const SERIES = [
  * group of 3 colored bars (the metrics). Replaces a stack of per-item cards and
  * gives a clear per-article breakdown of all three metrics at a glance.
  */
+const LEGEND_PREVIEW = 3;
+
 export default function PerformanceTrendChart({
   points,
 }: {
   points: TrendPoint[];
 }) {
+  const [showAll, setShowAll] = useState(false);
   if (points.length === 0) return <></>;
+
+  const visible = showAll ? points : points.slice(0, LEGEND_PREVIEW);
+  const hidden = points.length - LEGEND_PREVIEW;
 
   return (
     <CardShell>
@@ -90,15 +97,24 @@ export default function PerformanceTrendChart({
         </ResponsiveContainer>
       </div>
 
-      {/* Which article each x-point is (the chart x-axis is the publish date). */}
+      {/* Which article each x-point is (the chart x-axis is the publish date).
+          Collapsed past LEGEND_PREVIEW so a long list doesn't dominate the card. */}
       <ul className="mt-3 space-y-1 border-t border-white/10 pt-2">
-        {points.map((p, i) => (
+        {visible.map((p, i) => (
           <li key={i} className="flex gap-2 text-[11px] text-gray-400">
             <span className="shrink-0 font-black text-white/40 w-14">{p.name}</span>
             <span className="truncate text-gray-300">{p.title}</span>
           </li>
         ))}
       </ul>
+      {hidden > 0 && (
+        <button
+          onClick={() => setShowAll((s) => !s)}
+          className="mt-1.5 text-[11px] font-bold text-substack-orange hover:text-neon-pink transition-colors"
+        >
+          {showAll ? "Show less" : `See ${hidden} more`}
+        </button>
+      )}
     </CardShell>
   );
 }
