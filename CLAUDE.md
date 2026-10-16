@@ -87,10 +87,10 @@ python agent.py --sdk openai
 | `agent.py` | CLI picker (`--sdk agno\|claude\|openai`) |
 | `agents/constants.py` | MCP_URL + model names |
 | `agents/shared/prompt.py` | SYSTEM_PROMPT (claude + openai) + AGNO_INSTRUCTIONS |
-| `agents/agno/agent.py` | Agno implementation |
+| `agents/shared/skills.py` | Fetches skills from MCP resources (`skill://<name>/SKILL.md`) at import time |
+| `agents/agno/agent.py` | Agno implementation (custom `MCPSkills` SkillLoader) |
 | `agents/claude/agent.py` | Anthropic SDK implementation |
 | `agents/openai/agent.py` | OpenAI Agents SDK implementation |
-| `skills/` | 5 SKILL.md files loaded natively by agno, compiled into prompt for others |
 
 ## Import trick (important)
 

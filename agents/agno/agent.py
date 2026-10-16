@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from agno.agent import Agent
 from agno.models.anthropic import Claude
 from agno.tools.mcp import MCPTools
-from agno.skills import Skills, LocalSkills
+from agno.skills import Skill, SkillLoader, Skills
 from agno.db.in_memory import InMemoryDb
 from openinference.instrumentation.agno import AgnoInstrumentor
 from opentelemetry import trace as trace_api
@@ -12,8 +12,25 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from constants import MCP_URL, AGNO_MODEL
 from shared.prompt import AGNO_INSTRUCTIONS
+from shared.skills import SKILLS
 
 load_dotenv()
+
+
+class MCPSkills(SkillLoader):
+    """Loads the skills the MCP server exposes as skill:// resources."""
+
+    def load(self) -> list[Skill]:
+        return [
+            Skill(
+                name=skill["name"],
+                description=skill["description"],
+                instructions=skill["instructions"],
+                source_path=skill["uri"],
+            )
+            for skill in SKILLS.values()
+        ]
+
 
 _tracer_provider = TracerProvider()
 _tracer_provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
@@ -33,7 +50,7 @@ _agent = Agent(
     add_history_to_context=True,
     read_chat_history=True,
     read_tool_call_history=True,
-    skills=Skills(loaders=[LocalSkills("./skills")]),
+    skills=Skills(loaders=[MCPSkills()]),
     instructions=AGNO_INSTRUCTIONS,
     markdown=True,
 )

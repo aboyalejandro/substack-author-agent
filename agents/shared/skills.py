@@ -1,47 +1,52 @@
 """
-Skill loading — mirrors Agno's LocalSkills/Skills mechanics for use in
-the Anthropic SDK and OpenAI Agents SDK agents.
+Skill loading — fetches skills exposed by the MCP server as resources
+(skill://<name>/SKILL.md), so all three agents share one skill source.
+Fetched once at import time.
 """
 
+import asyncio
 import json
-import os
 import re
 
-_SKILLS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "skills"))
+import yaml
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
+
+from constants import MCP_URL
 
 
 def _parse_skill_md(content: str) -> tuple[dict, str]:
     match = re.match(r"^---\n(.*?)\n---\n(.*)", content, re.DOTALL)
     if not match:
-        return {}, content
-    frontmatter = {}
-    for line in match.group(1).splitlines():
-        if ":" in line:
-            key, _, val = line.partition(":")
-            frontmatter[key.strip()] = val.strip().strip('"')
-    return frontmatter, match.group(2).strip()
+        return {}, content.strip()
+    return yaml.safe_load(match.group(1)) or {}, match.group(2).strip()
 
 
-def _load_skills() -> dict[str, dict]:
-    skills = {}
-    if not os.path.isdir(_SKILLS_DIR):
-        return skills
-    for entry in sorted(os.listdir(_SKILLS_DIR)):
-        path = os.path.join(_SKILLS_DIR, entry, "SKILL.md")
-        if not os.path.isfile(path):
-            continue
-        with open(path) as f:
-            frontmatter, instructions = _parse_skill_md(f.read())
-        name = frontmatter.get("name", entry)
-        skills[name] = {
-            "name": name,
-            "description": frontmatter.get("description", ""),
-            "instructions": instructions,
-        }
-    return skills
+async def _read_skill(session: ClientSession, resource) -> dict:
+    result = await session.read_resource(resource.uri)
+    content = "".join(part.text for part in result.contents if hasattr(part, "text"))
+    frontmatter, instructions = _parse_skill_md(content)
+    uri = str(resource.uri)
+    name = frontmatter.get("name") or uri.removeprefix("skill://").removesuffix("/SKILL.md")
+    return {
+        "name": name,
+        "description": frontmatter.get("description") or resource.description or "",
+        "instructions": instructions,
+        "uri": uri,
+    }
 
 
-SKILLS = _load_skills()
+async def _fetch_skills() -> dict[str, dict]:
+    async with streamable_http_client(MCP_URL) as (read, write, _):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            listing = await session.list_resources()
+            skill_resources = [r for r in listing.resources if str(r.uri).endswith("/SKILL.md")]
+            skills = await asyncio.gather(*(_read_skill(session, r) for r in skill_resources))
+            return {skill["name"]: skill for skill in skills}
+
+
+SKILLS = asyncio.run(_fetch_skills())
 
 
 def get_skills_prompt_snippet() -> str:
