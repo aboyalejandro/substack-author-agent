@@ -1,0 +1,17 @@
+{
+  "skill": "analyze-comments",
+  "evals": [
+    {
+      "id": "comments-natural-phrasing",
+      "prompt": "What are readers saying about my articles? https://thepipeandtheline.substack.com",
+      "success_criteria": "Loads analyze-comments first, finds the most commented articles and reads their comments before summarizing.",
+      "code": {
+        "first_tool": "get_skill_instructions",
+        "skill_arg": "analyze-comments",
+        "tools_min": {"get_article_comments": 1}
+      },
+      "rubrics": ["grounded-in-data", "no-url-nagging"],
+      "rubric": "The answer gives a sentiment breakdown, ranks recurring themes with a representative reader quote each, and proposes content opportunities that cite the reader signal behind them."
+    }
+  ]
+}

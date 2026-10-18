@@ -1,0 +1,11 @@
+{
+ "articles-natural-phrasing": 0.0,
+ "articles-vague-query": 0.6666666666666666,
+ "comments-natural-phrasing": 1.0,
+ "cover-brand-template": 1.0,
+ "general-question-no-tools": 1.0,
+ "ideas-natural-phrasing": 0.0,
+ "multi-intent-analysis-then-ideas": 1.0,
+ "notes-natural-phrasing": 0.0,
+ "voice-natural-phrasing": 1.0
+}

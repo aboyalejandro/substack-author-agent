@@ -103,3 +103,23 @@ CLAUDE.md                 # Claude Code guide + run instructions
 - [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)
 - [Substack Author MCP](https://github.com/aboyalejandro/substack-author-mcp)
 - [Opik Observability](https://www.comet.com/docs/opik/)
+
+## Agent evals
+
+`agent-evals/` tests the agent itself (system prompt, skill routing, tool use), following Anthropic's guide to [developing tests](https://platform.claude.com/docs/en/test-and-evaluate/develop-tests). Every model call, the agent's and the grader's, goes through `claude -p`, so it runs on your Claude Code subscription and needs no API key.
+
+```bash
+python3 agent-evals/run.py                         # every case, 1 run each
+python3 agent-evals/run.py --only analyze-notes --runs 3
+python3 agent-evals/run.py --code-only             # skip the LLM grader
+python3 agent-evals/run.py --runs 3 --update-baseline   # accept current scores
+```
+
+- `agent-evals/<skill>/evals.json` has one file per skill. Each case has a `prompt`, its `success_criteria`, `code` checks (first tool called, which skill was loaded, minimum calls per tool, call order, regexes on the answer) and an LLM `rubric`.
+- `agent-evals/rubrics/*.md` are rubrics shared across cases and mirror rules in `agents/shared/prompt.py` (anchor every metric, ground answers in fetched data, don't ask for a URL you already have).
+- The agent under test is the Claude agent's recipe: `SYSTEM_PROMPT`, the local `get_skill_instructions` tool (served by `agent-evals/skills_server.py`) and the live Substack Author MCP. Claude Code's own tools are off. The grader is Sonnet, a different model than the Haiku agent.
+- `baseline.json` stores the pass rate per case. The run prints `REGRESSION` and exits 1 when a case drops below it. Some cases start below 1.00 because the agent really misses those rules today, so fixing them raises the baseline.
+
+### Run it while developing with Claude Code
+
+`.claude/settings.json` registers a `PostToolUse` hook. When Claude edits `agents/shared/prompt.py`, `agents/shared/skills.py` or `agents/constants.py`, `agent-evals/hook.sh` runs every case once and exits 2 with the regressions, so Claude sees what changed and fixes it. A full pass takes a few minutes. Needs `fastmcp` installed (already in `requirements.txt`).

@@ -3,3 +3,5 @@ venv/
 .DS_Store
 *.pyc
 __pycache__/
+# agent evals
+agent-evals/results/

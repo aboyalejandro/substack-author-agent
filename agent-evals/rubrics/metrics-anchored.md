@@ -1,0 +1,2 @@
+Every engagement metric in the answer (reactions, restacks, comments, replies, open rate) must be framed relative to the publication's average or a rank among its other articles or notes, for example "31 restacks (publication avg: 12)" or "top 10% of your articles".
+Mark the answer incorrect if it reports any raw metric number in isolation, or if it cannot compute an average and does not say so explicitly.

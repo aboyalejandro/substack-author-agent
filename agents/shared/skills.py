@@ -37,7 +37,9 @@ async def _read_skill(session: ClientSession, resource) -> dict:
 
 
 async def _fetch_skills() -> dict[str, dict]:
-    async with streamable_http_client(MCP_URL) as (read, write, _):
+    async with streamable_http_client(MCP_URL) as streams:
+        # mcp<2 yields (read, write, get_session_id); newer versions yield (read, write)
+        read, write = streams[:2]
         async with ClientSession(read, write) as session:
             await session.initialize()
             listing = await session.list_resources()

@@ -1,0 +1,17 @@
+{
+  "skill": "brand-voice",
+  "evals": [
+    {
+      "id": "voice-natural-phrasing",
+      "prompt": "Describe how I write and give me a prompt template so Claude can write like me. https://thepipeandtheline.substack.com",
+      "success_criteria": "Loads brand-voice first, reads full article text and notes, and returns a voice profile plus a reusable prompt template.",
+      "code": {
+        "first_tool": "get_skill_instructions",
+        "skill_arg": "brand-voice",
+        "tools_min": {"get_article_content": 3, "get_substack_notes": 1}
+      },
+      "rubrics": ["no-url-nagging"],
+      "rubric": "The answer contains a voice profile, a style breakdown with do's and don'ts, and a prompt template for writing in the author's voice. It is specific to this author's real writing and could not describe any other newsletter."
+    }
+  ]
+}
