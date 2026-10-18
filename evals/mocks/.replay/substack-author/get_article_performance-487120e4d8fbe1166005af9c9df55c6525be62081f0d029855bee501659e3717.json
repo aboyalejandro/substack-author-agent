@@ -1,0 +1,9 @@
+{
+  "input": {
+    "article_url": "https://example.substack.com/p/dbt-vs-sqlmesh"
+  },
+  "output": "{\"article_url\": \"https://example.substack.com/p/dbt-vs-sqlmesh\", \"reactions\": 64, \"restacks\": 12, \"comments\": 0}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:55:58.076Z",
+  "model": "claude-sonnet-5-5"
+}

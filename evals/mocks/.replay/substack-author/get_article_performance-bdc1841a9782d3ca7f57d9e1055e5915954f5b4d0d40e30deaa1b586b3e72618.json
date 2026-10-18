@@ -1,0 +1,9 @@
+{
+  "input": {
+    "article_url": "https://example.substack.com/p/pipeline-contracts"
+  },
+  "output": "{\"article_url\": \"https://example.substack.com/p/pipeline-contracts\", \"reactions\": 128, \"restacks\": 31, \"comments\": 4}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:55:56.620Z",
+  "model": "claude-sonnet-5-5"
+}

@@ -1,0 +1,10 @@
+{
+  "input": {
+    "url": "https://example.substack.com/p/dbt-vs-sqlmesh",
+    "sort": "best_first"
+  },
+  "output": "{\"comments\": []}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:53:57.937Z",
+  "model": "claude-sonnet-5-5"
+}

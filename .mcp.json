@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "substack-author": {
+      "type": "http",
+      "url": "https://substack-author.fastmcp.app/mcp"
+    }
+  }
+}

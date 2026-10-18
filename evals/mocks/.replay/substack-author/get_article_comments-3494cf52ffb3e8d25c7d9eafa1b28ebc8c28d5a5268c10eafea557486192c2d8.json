@@ -1,0 +1,10 @@
+{
+  "input": {
+    "article_url": "https://example.substack.com/p/evals-month",
+    "sort": "best_first"
+  },
+  "output": "{\"comments\": []}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:54:07.024Z",
+  "model": "claude-sonnet-5-5"
+}

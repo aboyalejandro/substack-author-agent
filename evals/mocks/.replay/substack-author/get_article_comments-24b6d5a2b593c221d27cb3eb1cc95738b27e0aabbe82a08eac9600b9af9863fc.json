@@ -1,0 +1,10 @@
+{
+  "input": {
+    "url": "https://example.substack.com/p/airflow-upgrades",
+    "sort": "best_first"
+  },
+  "output": "{\"comments\": []}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:54:02.770Z",
+  "model": "claude-sonnet-5-5"
+}

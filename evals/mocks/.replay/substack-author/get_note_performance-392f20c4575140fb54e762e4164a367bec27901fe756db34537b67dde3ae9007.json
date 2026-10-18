@@ -1,0 +1,9 @@
+{
+  "input": {
+    "note_id": 101
+  },
+  "output": "{\"note_id\": 101, \"reply_count\": 2, \"author\": \"publication_owner\", \"parent\": null}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:54:28.566Z",
+  "model": "claude-sonnet-5-5"
+}
