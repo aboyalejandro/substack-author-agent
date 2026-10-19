@@ -10,5 +10,4 @@ exec claude plugin eval . \
   --judge-model sonnet \
   --concurrency 4 \
   --no-publish \
-  --json evals/results/latest.json \
   "$@"
