@@ -1,0 +1,7 @@
+{
+  "input": {},
+  "output": "Missing required argument: article_url",
+  "verdict": "tool_error",
+  "recordedAt": "2026-10-18T12:55:03.324Z",
+  "model": "claude-sonnet-5-5"
+}

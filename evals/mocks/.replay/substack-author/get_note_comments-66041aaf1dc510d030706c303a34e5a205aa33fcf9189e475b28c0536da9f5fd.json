@@ -1,0 +1,10 @@
+{
+  "input": {
+    "url": "https://example.substack.com",
+    "note_id": 104
+  },
+  "output": "{\"note_id\":\"104\",\"comments\":[{\"author\":\"reader_fay\",\"body\":\"Postgres. Boring, fast, never fails me.\"}]}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:55:52.947Z",
+  "model": "claude-sonnet-5-5"
+}

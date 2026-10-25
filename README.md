@@ -123,3 +123,32 @@ python3 agent-evals/run.py --runs 3 --update-baseline   # accept current scores
 ### Run it while developing with Claude Code
 
 `.claude/settings.json` registers a `PostToolUse` hook. When Claude edits `agents/shared/prompt.py`, `agents/shared/skills.py` or `agents/constants.py`, `agent-evals/hook.sh` runs every case once and exits 2 with the regressions, so Claude sees what changed and fixes it. A full pass takes a few minutes. Needs `fastmcp` installed (already in `requirements.txt`).
+
+## Plugin evals (skills)
+
+The six skills are also packaged as a Claude Code plugin (`.claude-plugin/plugin.json`, `skills/`, `.mcp.json`) so [`claude plugin eval`](https://code.claude.com/docs/en/plugin-evals) can test them. It runs on your Claude Code subscription, no API key needed.
+
+```bash
+scripts/run-evals.sh                           # whole suite, 3 runs per case, with and without the plugin
+scripts/run-evals.sh --case analyze-notes --runs 1 --ablation none   # one skill, fast
+```
+
+- `evals/<skill>/` holds one case per skill: `prompt.md` (how a user would ask), and `graders/` (`skill-fired`, `used-data`, and an LLM `rubric`). `evals/unrelated-request/` checks that no skill fires on an off-topic question.
+- `evals/mocks/substack-author/` replaces the MCP server with fixtures, so runs are repeatable and never hit Substack. The `.replay/` folder keeps recorded answers of the agent mocks.
+- The table prints `WITH`, `W/OUT` and `Δ`. A skill whose `Δ` drops to ~0 or whose `skill-fired` grader fails no longer triggers.
+- `skills/` is a snapshot of the skills the MCP server serves. Refresh it with `python3 scripts/sync_skills.py` and review the diff.
+
+### Live test with screenshots
+
+```bash
+scripts/live-eval.sh                                   # whole suite
+scripts/live-eval.sh --case analyze-notes --runs 1 --ablation none   # one skill, fast
+```
+
+It runs the suite and saves `evals/results/live/summary.txt` (the table), `report.html` and a `report.png` screenshot of the report, taken with headless Chrome or Chromium (set `CHROME=/path/to/chrome` if it is not on your PATH). The folder is git-ignored.
+
+### Run it while developing with Claude Code
+
+`.claude/settings.json` registers a `PostToolUse` hook. When Claude edits `skills/<name>/SKILL.md`, `scripts/eval-hook.sh` runs that skill's case once. If a grader fails, the hook exits 2 and Claude sees the failing graders and fixes the skill. Needs Claude Code 2.1.269+ and git 2.31+.
+
+Adding a skill means adding `evals/<skill-name>/` (same name as the skill), otherwise the hook asks for it.

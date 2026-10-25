@@ -4,6 +4,7 @@
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/eval-hook.sh", "timeout": 300 },
           { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/agent-evals/hook.sh", "timeout": 600 }
         ]
       }

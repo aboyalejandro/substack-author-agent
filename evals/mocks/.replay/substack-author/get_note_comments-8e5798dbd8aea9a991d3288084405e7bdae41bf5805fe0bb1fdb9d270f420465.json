@@ -1,0 +1,7 @@
+{
+  "input": {},
+  "output": "missing required argument \"note_id\"",
+  "verdict": "tool_error",
+  "recordedAt": "2026-10-18T12:55:53.996Z",
+  "model": "claude-sonnet-5-5"
+}

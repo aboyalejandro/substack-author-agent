@@ -1,0 +1,9 @@
+{
+  "input": {
+    "article_url": "https://example.substack.com/p/pipeline-contracts"
+  },
+  "output": "{\"article_url\":\"https://example.substack.com/p/pipeline-contracts\",\"comments\":[\n{\"id\":1,\"author\":\"reader_ana\",\"is_author\":false,\"body\":\"Loved this. How do you enforce contracts when the producer is a third-party API?\",\"reactions\":7,\"replies\":[{\"id\":2,\"author\":\"publication_owner\",\"is_author\":true,\"body\":\"Good question, I wrap the API in a thin validation layer. Will write about it.\"}]},\n{\"id\":3,\"author\":\"reader_bo\",\"is_author\":false,\"body\":\"Honestly this feels like overkill for a team of two.\",\"reactions\":2,\"replies\":[]},\n{\"id\":4,\"author\":\"reader_cy\",\"is_author\":false,\"body\":\"Please do a follow-up on schema registries!\",\"reactions\":5,\"replies\":[]}]}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:53:34.109Z",
+  "model": "claude-sonnet-5-5"
+}

@@ -1,0 +1,1 @@
+Cover image for {{input.article_url}}: dark navy background, neon cyan and magenta line art of pipes and valves, glowing holographic panels with data charts, soft rim lighting, centered subject with wide negative space on the left, illustrated digital art, portrait 2:3.

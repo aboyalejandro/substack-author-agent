@@ -5,3 +5,5 @@ venv/
 __pycache__/
 # agent evals
 agent-evals/results/
+# plugin evals
+evals/results/
