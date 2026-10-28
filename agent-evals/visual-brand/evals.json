@@ -1,0 +1,18 @@
+{
+  "skill": "visual-brand",
+  "evals": [
+    {
+      "id": "cover-brand-template",
+      "prompt": "Look at my last 3 covers and give me a prompt template to keep new covers consistent. https://thepipeandtheline.substack.com",
+      "success_criteria": "Loads visual-brand first, fetches the cover of each article and returns a brand template prompt with [variable] placeholders in a code block.",
+      "code": {
+        "first_tool": "get_skill_instructions",
+        "skill_arg": "visual-brand",
+        "tools_min": {"get_cover_image": 3},
+        "regex": ["```", "\\[[^\\]]{2,}\\]"]
+      },
+      "rubrics": ["no-url-nagging"],
+      "rubric": "The answer has one line per cover, flags outliers, and gives a brand template prompt that covers palette, lighting, layout, style, mood and the format 'portrait 2:3'."
+    }
+  ]
+}

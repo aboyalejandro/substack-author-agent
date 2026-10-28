@@ -1,0 +1,9 @@
+{
+  "input": {
+    "note_id": 101
+  },
+  "output": "{\"note_id\":\"101\",\"comments\":[{\"author\":\"reader_dee\",\"body\":\"Agree, but who writes the unit tests for the unit tests?\"},{\"author\":\"reader_eli\",\"body\":\"We replaced our DQ dashboard with dbt tests and never looked back.\"}]}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:54:38.688Z",
+  "model": "claude-sonnet-5-5"
+}

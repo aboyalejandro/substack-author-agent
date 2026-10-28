@@ -1,0 +1,9 @@
+{
+  "input": {
+    "url": "https://example.substack.com/p/weekend-iceberg"
+  },
+  "output": "{\"article_url\": \"https://example.substack.com/p/weekend-iceberg\", \"reactions\": 23, \"restacks\": 3, \"comments\": 0}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:55:45.157Z",
+  "model": "claude-sonnet-5-5"
+}

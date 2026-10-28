@@ -1,0 +1,9 @@
+{
+  "input": {
+    "url": "https://example.substack.com/p/airflow-upgrades"
+  },
+  "output": "{\"article_url\": \"https://example.substack.com/p/airflow-upgrades\", \"reactions\": 11, \"restacks\": 1, \"comments\": 0}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:55:42.812Z",
+  "model": "claude-sonnet-5-5"
+}

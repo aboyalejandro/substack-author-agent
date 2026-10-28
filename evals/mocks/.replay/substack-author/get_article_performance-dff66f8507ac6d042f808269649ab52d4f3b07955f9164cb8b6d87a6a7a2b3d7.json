@@ -1,0 +1,9 @@
+{
+  "input": {
+    "url": "https://example.substack.com/p/evals-month"
+  },
+  "output": "{\"article_url\": \"https://example.substack.com/p/evals-month\", \"reactions\": 87, \"restacks\": 19, \"comments\": 0}",
+  "verdict": "ok",
+  "recordedAt": "2026-10-18T12:55:43.948Z",
+  "model": "claude-sonnet-5-5"
+}

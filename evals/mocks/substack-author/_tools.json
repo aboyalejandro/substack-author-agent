@@ -1,0 +1,313 @@
+{
+ "ttl_ms": 0,
+ "cache_scope": "private",
+ "tools": [
+  {
+   "name": "get_substack_articles",
+   "description": "Fetch articles from a Substack publication with metadata including cover images",
+   "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+     "publication_url": {
+      "type": "string",
+      "description": "Substack publication URL (e.g., https://username.substack.com)"
+     },
+     "limit": {
+      "default": 5,
+      "type": "integer",
+      "description": "Maximum number of articles to return (default: 5)"
+     }
+    },
+    "required": [
+     "publication_url"
+    ],
+    "type": "object"
+   },
+   "annotations": {
+    "read_only_hint": true
+   },
+   "meta": {
+    "fastmcp": {
+     "versions": [
+      "1.3"
+     ],
+     "tags": [],
+     "version": "1.3"
+    }
+   }
+  },
+  {
+   "name": "get_article_content",
+   "description": "Fetch full content and metadata for a specific Substack article including cover image",
+   "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+     "article_url": {
+      "type": "string",
+      "description": "Full URL to the article (e.g., https://username.substack.com/p/article-slug)"
+     }
+    },
+    "required": [
+     "article_url"
+    ],
+    "type": "object"
+   },
+   "annotations": {
+    "read_only_hint": true
+   },
+   "meta": {
+    "fastmcp": {
+     "versions": [
+      "1.1"
+     ],
+     "tags": [],
+     "version": "1.1"
+    }
+   }
+  },
+  {
+   "name": "get_article_performance",
+   "description": "Retrieve performance metrics for a Substack article (restacks, reactions, comments, cover image)",
+   "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+     "article_url": {
+      "type": "string",
+      "description": "Full URL to the article (e.g., https://username.substack.com/p/article-slug)"
+     }
+    },
+    "required": [
+     "article_url"
+    ],
+    "type": "object"
+   },
+   "annotations": {
+    "read_only_hint": true
+   },
+   "meta": {
+    "fastmcp": {
+     "versions": [
+      "1.0"
+     ],
+     "tags": [],
+     "version": "1.0"
+    }
+   }
+  },
+  {
+   "name": "get_article_comments",
+   "description": "Fetch all comments from a Substack article including nested replies",
+   "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+     "article_url": {
+      "type": "string",
+      "description": "Full URL to the article (e.g., https://username.substack.com/p/article-slug)"
+     },
+     "sort": {
+      "default": "best_first",
+      "type": "string",
+      "description": "Sort order - \"best_first\" (default) or \"oldest_first\""
+     },
+     "limit": {
+      "default": null,
+      "type": "integer",
+      "description": "Maximum number of top-level comments to return (default: all)"
+     }
+    },
+    "required": [
+     "article_url"
+    ],
+    "type": "object"
+   },
+   "annotations": {
+    "read_only_hint": true
+   },
+   "meta": {
+    "fastmcp": {
+     "versions": [
+      "1.0"
+     ],
+     "tags": [],
+     "version": "1.0"
+    }
+   }
+  },
+  {
+   "name": "search_articles",
+   "description": "Search articles within a Substack publication by keyword query with pagination support",
+   "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+     "publication_url": {
+      "type": "string",
+      "description": "Substack publication URL (e.g., https://username.substack.com)"
+     },
+     "query": {
+      "type": "string",
+      "description": "Search query string (e.g., \"claude code\")"
+     },
+     "page": {
+      "default": 0,
+      "type": "integer",
+      "description": "Page number for pagination (default: 0)"
+     },
+     "number_focused": {
+      "default": 10,
+      "type": "integer",
+      "description": "Number of results per page (default: 10)"
+     }
+    },
+    "required": [
+     "publication_url",
+     "query"
+    ],
+    "type": "object"
+   },
+   "annotations": {
+    "read_only_hint": true
+   },
+   "meta": {
+    "fastmcp": {
+     "versions": [
+      "1.0"
+     ],
+     "tags": [],
+     "version": "1.0"
+    }
+   }
+  },
+  {
+   "name": "get_substack_notes",
+   "description": "Fetch Substack notes with cursor-based pagination support",
+   "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+     "publication_url": {
+      "type": "string",
+      "description": "Substack publication URL (e.g., https://username.substack.com)"
+     },
+     "limit": {
+      "default": 10,
+      "type": "integer",
+      "description": "Maximum number of notes to return (default: 10, recommended max: 100)"
+     },
+     "cursor": {
+      "default": null,
+      "type": "string",
+      "description": "Cursor from previous response for next page"
+     }
+    },
+    "required": [
+     "publication_url"
+    ],
+    "type": "object"
+   },
+   "annotations": {
+    "read_only_hint": true
+   },
+   "meta": {
+    "fastmcp": {
+     "versions": [
+      "1.0"
+     ],
+     "tags": [],
+     "version": "1.0"
+    }
+   }
+  },
+  {
+   "name": "get_note_performance",
+   "description": "Retrieve detailed performance and metadata for a single Substack note (reply count, author info, attachments, parent context)",
+   "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+     "note_id": {
+      "type": "integer",
+      "description": "The note's comment ID (from get_substack_notes response)"
+     }
+    },
+    "required": [
+     "note_id"
+    ],
+    "type": "object"
+   },
+   "annotations": {
+    "read_only_hint": true
+   },
+   "meta": {
+    "fastmcp": {
+     "versions": [
+      "1.0"
+     ],
+     "tags": [],
+     "version": "1.0"
+    }
+   }
+  },
+  {
+   "name": "get_note_comments",
+   "description": "Fetch replies/comments on a specific Substack note with nested threading",
+   "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+     "note_id": {
+      "type": "integer",
+      "description": "The note's comment ID (from get_substack_notes response)"
+     },
+     "limit": {
+      "default": null,
+      "type": "integer",
+      "description": "Maximum number of top-level replies to return (default: all)"
+     }
+    },
+    "required": [
+     "note_id"
+    ],
+    "type": "object"
+   },
+   "annotations": {
+    "read_only_hint": true
+   },
+   "meta": {
+    "fastmcp": {
+     "versions": [
+      "1.1"
+     ],
+     "tags": [],
+     "version": "1.1"
+    }
+   }
+  },
+  {
+   "name": "get_cover_image",
+   "description": "Fetch the cover image for a specific Substack article for visual analysis",
+   "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+     "article_url": {
+      "type": "string",
+      "description": "Full URL to the article (e.g., https://username.substack.com/p/article-slug)"
+     }
+    },
+    "required": [
+     "article_url"
+    ],
+    "type": "object"
+   },
+   "annotations": {
+    "read_only_hint": true
+   },
+   "meta": {
+    "fastmcp": {
+     "versions": [
+      "1.0"
+     ],
+     "tags": [],
+     "version": "1.0"
+    }
+   }
+  }
+ ],
+ "result_type": "complete"
+}

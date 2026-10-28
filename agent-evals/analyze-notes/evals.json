@@ -1,0 +1,17 @@
+{
+  "skill": "analyze-notes",
+  "evals": [
+    {
+      "id": "notes-natural-phrasing",
+      "prompt": "Which of my notes work best? https://thepipeandtheline.substack.com",
+      "success_criteria": "Loads analyze-notes first, fetches at least 10 notes, and ranks them by reactions and restacks relative to the rest.",
+      "code": {
+        "first_tool": "get_skill_instructions",
+        "skill_arg": "analyze-notes",
+        "tools_min": {"get_substack_notes": 1}
+      },
+      "rubrics": ["metrics-anchored", "grounded-in-data", "no-url-nagging"],
+      "rubric": "The answer quotes the opening line of the top notes, explains what format or topic patterns separate top from bottom notes, and proposes note ideas with an opening hook."
+    }
+  ]
+}

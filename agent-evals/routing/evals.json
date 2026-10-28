@@ -1,0 +1,24 @@
+{
+  "skill": "routing",
+  "evals": [
+    {
+      "id": "general-question-no-tools",
+      "prompt": "In two sentences, what is the difference between a restack and a like on Substack?",
+      "success_criteria": "A general question is answered directly: no skill, no data tool and no request for the publication URL.",
+      "code": {"no_tools": true},
+      "rubrics": ["no-url-nagging"]
+    },
+    {
+      "id": "multi-intent-analysis-then-ideas",
+      "prompt": "See what worked on my articles and then tell me what to write next. https://thepipeandtheline.substack.com",
+      "success_criteria": "Runs the analysis skill first and only then content-ideas, so the ideas are driven by the analysis.",
+      "code": {
+        "first_tool": "get_skill_instructions",
+        "skill_arg": "analyze-articles",
+        "order": ["get_article_performance", "search_articles"]
+      },
+      "rubrics": ["grounded-in-data"],
+      "rubric": "The answer first summarizes what worked and then proposes ideas that explicitly build on that analysis."
+    }
+  ]
+}

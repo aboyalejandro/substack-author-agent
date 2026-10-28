@@ -1,0 +1,17 @@
+{
+  "skill": "content-ideas",
+  "evals": [
+    {
+      "id": "ideas-natural-phrasing",
+      "prompt": "What should I write next? https://thepipeandtheline.substack.com",
+      "success_criteria": "Loads content-ideas first and checks every proposed topic against published articles with search_articles before presenting it.",
+      "code": {
+        "first_tool": "get_skill_instructions",
+        "skill_arg": "content-ideas",
+        "tools_min": {"search_articles": 1, "get_article_performance": 1}
+      },
+      "rubrics": ["metrics-anchored", "grounded-in-data", "no-url-nagging"],
+      "rubric": "The answer proposes 3 article ideas, each with a headline, angle, the data that inspired it, and a coverage check saying whether it is a new topic or a follow-up to an existing article."
+    }
+  ]
+}

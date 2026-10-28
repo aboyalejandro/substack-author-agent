@@ -1,0 +1,29 @@
+{
+  "skill": "analyze-articles",
+  "evals": [
+    {
+      "id": "articles-natural-phrasing",
+      "prompt": "How are my latest articles doing? https://thepipeandtheline.substack.com",
+      "success_criteria": "Loads analyze-articles before any data tool, fetches performance for the articles it lists, and reports each metric relative to the publication average.",
+      "code": {
+        "first_tool": "get_skill_instructions",
+        "skill_arg": "analyze-articles",
+        "tools_min": {"get_substack_articles": 1, "get_article_performance": 3},
+        "order": ["get_skill_instructions", "get_substack_articles", "get_article_performance"]
+      },
+      "rubrics": ["metrics-anchored", "grounded-in-data", "no-url-nagging"],
+      "rubric": "The answer contains a performance table or ranking of articles, names the top performers with a reason each, and ends with concrete next steps."
+    },
+    {
+      "id": "articles-vague-query",
+      "prompt": "How am I doing? https://thepipeandtheline.substack.com",
+      "success_criteria": "A vague question defaults to analyze-articles to ground the answer in data, per the Skill Routing rules in the system prompt.",
+      "code": {
+        "first_tool": "get_skill_instructions",
+        "skill_arg": "analyze-articles",
+        "tools_min": {"get_article_performance": 1}
+      },
+      "rubrics": ["grounded-in-data"]
+    }
+  ]
+}
